@@ -1,10 +1,13 @@
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import Vue from 'vue';
+import ElementUI from 'element-ui';
+import 'element-ui/lib/theme-chalk/index.css';
 import App from './App.vue';
 
 Vue.config.productionTip = false;
 Vue.config.devtools = true;
+Vue.use(ElementUI);
 
 import * as Wails from '@wailsapp/runtime';
 

@@ -23,5 +23,35 @@ func main() {
 		Colour: "#131313",
 	})
 	app.Bind(basic)
+	app.Bind(datas)
 	app.Run()
+}
+
+func datas() string {
+	return `[{
+	date: '2016-05-07',
+	name: 'zhangyiyang',
+	address: '/ddd/ddd/ddd/d/dd'
+},{
+	date: '2016-05-17',
+	name: 'zhangyiyang1',
+	address: '/ddd/ddd/ddd/d/dd222'
+},{
+	date: '2016-05-27',
+	name: 'zhangyiyang2',
+	address: '/ddd/ddd/ddd/d/11122'
+},{
+	date: '2016-05-18',
+	name: 'zhangyiyang3',
+	address: '/ddd/ddd/ddd/d/dd123'
+},{
+	date: '2020-05-18',
+	name: 'zhangyiyang4',
+	address: '/ddd/dd4444'
+}
+
+
+
+
+]`
 }
