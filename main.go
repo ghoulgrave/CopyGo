@@ -56,7 +56,34 @@ func main() {
 	})
 	app.Bind(basic)
 	app.Bind(datas)
+	app.Bind(sub)
+	app.Bind(logselect)
 	app.Run()
+}
+
+func sub(xx string) string {
+	println(xx)
+	return "ok"
+}
+
+func logselect() string {
+
+	return `[{
+      value: '选项1',
+      label: '黄金糕22'
+    }, {
+      value: '选项2',
+      label: '双皮奶33'
+    }, {
+      value: '选项3',
+      label: '蚵仔煎44'
+    }, {
+      value: '选项4',
+      label: '龙须面55'
+    }, {
+      value: '选项5',
+      label: '北京烤鸭66'
+    }]`
 }
 
 func datas() string {

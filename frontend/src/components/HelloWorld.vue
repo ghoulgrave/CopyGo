@@ -1,5 +1,19 @@
 <template>
   <div class="container">
+    <el-form :inline="true" :model="formInline" class="demo-form-inline">
+      <el-form-item label="审批人">
+        <el-input v-model="formInline.user" placeholder="审批人"></el-input>
+      </el-form-item>
+      <el-form-item label="活动区域">
+        <el-select v-model="formInline.region" placeholder="活动区域">
+          <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
+          </el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="onSubmit">查询</el-button>
+      </el-form-item>
+    </el-form>
     <h1>{{message}}</h1>
     <a @click="getMessage">Press Me!</a>
   </div>
@@ -8,9 +22,20 @@
 <script>
 export default {
   data() {
+    var ff ="";
+
+
     return {
-      message: "ccc"
+      message: ff,
+      formInline: {
+        user: '',
+        region: '选项3'
+      },
+    options: [],
     };
+  },
+  created() {
+    this.logselect();
   },
   methods: {
     getMessage: function() {
@@ -18,7 +43,19 @@ export default {
       window.backend.basic().then(result => {
         self.message = result;
       });
+    },
+    onSubmit() {
+      // eslint-disable-next-line no-console
+      console.log(this.region.valueOf())
+
+    },
+    logselect(){
+      window.backend.logselect().then(result =>{
+        this.options = eval(result);
+      });
     }
+
+
   }
 };
 </script>
