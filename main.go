@@ -35,25 +35,27 @@ func main() {
 	}
 	viper.Unmarshal(&MyConfig) // 将配置信息绑定到结构体上
 
-	//更新配置文件
-	//fmt.Println(MyConfig)
-	v := MyConfig.Conf
-	k := Confs{Sub_path: "http://ssss", Name: "ttttt", Dir_path: "/user/dfds/sdfsfd", Out_path: "/sss.dd/fffs/affd"}
-	v = append(v, k)
-	viper.Set("conf", v)
-
-	viper.Unmarshal(&MyConfig)
-	//fmt.Println(MyConfig)
+	////更新配置文件
+	////fmt.Println(MyConfig)
+	//v := MyConfig.Conf
+	//k := Confs{Sub_path: "http://ssss", Name: "ttttt", Dir_path: "/user/dfds/sdfsfd", Out_path: "/sss.dd/fffs/affd"}
+	//v = append(v, k)
+	//viper.Set("conf", v)
+	//
+	//viper.Unmarshal(&MyConfig)
+	////fmt.Println(MyConfig)
 
 	viper.WriteConfig()
 	app := wails.CreateApp(&wails.AppConfig{
-		Width:  1024,
-		Height: 768,
-		Title:  "copy",
-		JS:     js,
-		CSS:    css,
-		Colour: "#131313",
+		Width:     1024,
+		Height:    768,
+		Title:     "copy",
+		JS:        js,
+		CSS:       css,
+		Colour:    "#131313",
+		Resizable: true,
 	})
+
 	app.Bind(basic)
 	app.Bind(datas)
 	app.Bind(sub)

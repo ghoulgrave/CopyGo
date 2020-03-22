@@ -1,6 +1,6 @@
 <template>
-  <div id="app">
-    <HelloWorld/>
+  <div id="app" @contextmenu.prevent="rightClick()">
+
     <LogsTable/>
   </div>
 </template>
@@ -13,8 +13,11 @@ import "./assets/css/main.css";
 export default {
   name: "app",
   components: {
-    HelloWorld,
+
     LogsTable
-  }
+  },
+    method:{
+
+    }
 };
 </script>
