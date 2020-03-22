@@ -1,6 +1,10 @@
 <template>
     <div style="margin-top: 20px">
-
+        <div>
+            xxxx
+        </div>
+        <!-- <el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button> -->
+        <el-button @click="datas()">come on baby ！</el-button>
     <el-table
             ref="multipleTable"
             :data="tableData"
@@ -28,9 +32,7 @@
         </el-table-column>
     </el-table>
 
-        <el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button>
-        <el-button @click="toggleSelection()">取消选择</el-button>
-        <a @click="datas">Press Me!</a>
+
     </div>
 </template>
 

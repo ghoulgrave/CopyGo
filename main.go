@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"github.com/leaanthony/mewn"
 	"github.com/wailsapp/wails"
+	"os"
+	"path"
 )
 
 func basic() string {
@@ -13,6 +16,10 @@ func main() {
 
 	js := mewn.String("./frontend/dist/app.js")
 	css := mewn.String("./frontend/dist/app.css")
+
+	ePath, _ := os.Executable()
+	fmt.Println(ePath)
+	fmt.Println(path.Dir(ePath))
 
 	app := wails.CreateApp(&wails.AppConfig{
 		Width:  1024,

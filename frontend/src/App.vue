@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <HelloWorld/>
     <LogsTable/>
   </div>
 </template>
@@ -13,7 +12,6 @@ import "./assets/css/main.css";
 export default {
   name: "app",
   components: {
-    HelloWorld,
     LogsTable
   }
 };
