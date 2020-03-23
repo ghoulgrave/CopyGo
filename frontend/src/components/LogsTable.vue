@@ -28,6 +28,7 @@
                         tooltip-effect="dark"
                         style="width: 100%"
                         height="600"
+                        v-loading="loading"
                         @selection-change="handleSelectionChange">
                     <el-table-column
                             type="selection"
@@ -54,6 +55,13 @@
                             show-overflow-tooltip>
                     </el-table-column>
                 </el-table>
+        <el-drawer
+                title="我是标题"
+                :visible.sync="drawer"
+                :direction="direction"
+                :before-close="handleClose">
+            <span>我来啦!</span>
+        </el-drawer>
     </div>
 </template>
 
@@ -61,6 +69,12 @@
     export default {
         data() {
             return {
+                drawer: false,
+                //direction: 'rtl',//从右往左开
+                //direction: 'ltr',//从左往右开
+                //direction: 'ttb',//从上往下开
+                direction: 'btt',//从下往上开
+                loading: false,
                 formInline: {
                     user: '',
                     project: '',
@@ -86,11 +100,13 @@
             },
             //提交查询信息填写列表数据
             onSubmit() {
+                this.loading = true;
                 window.backend.sub(this.formInline.project, this.formInline.kssj, this.formInline.jssj, this.formInline.czr).then(result => {
                     var arry = eval(result);
                     this.tableData = [];
                     this.tableData = arry;
                     this.multipleSelection=[];
+                    this.loading = false;
                 });
             },
             //复选
@@ -108,17 +124,15 @@
                 this.multipleSelection = val;
             },
             datas: function () {
-                var self = this;
-                window.backend.getPaths().then(result => {
-                    var arry = eval(result)
-                    // arry = eval("[{\"name\":\"wangzijie\",\"time\":\"2020-03-18 11:25:27 +0800 (三, 18  3 2020)\",\"version\":\"r250954\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/service/impl/ExternalInfServiceImpl.java\",\"sublogs\":\"\"},{\"name\":\"wangzijie\",\"time\":\"2020-03-18 11:25:27 +0800 (三, 18  3 2020)\",\"version\":\"r250954\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/service/impl/TurnProjectBgdjServiceImpl.java\",\"sublogs\":\"\"},{\"name\":\"wangzijie\",\"time\":\"2020-03-18 11:25:27 +0800 (三, 18  3 2020)\",\"version\":\"r250954\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/web/query/JzReadHtxxController.java\",\"sublogs\":\"\"},{\"name\":\"wangzijie\",\"time\":\"2020-03-18 11:25:27 +0800 (三, 18  3 2020)\",\"version\":\"r250954\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/web/WEB-INF/views/query/jzReadHtxx.ftl\",\"sublogs\":\"\"},{\"name\":\"shaoliyao\",\"time\":\"2020-03-18 12:50:30 +0800 (三, 18  3 2020)\",\"version\":\"r250969\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/core/service/impl/BdcBankServiceImpl.java\",\"sublogs\":\"\"},{\"name\":\"shaoliyao\",\"time\":\"2020-03-18 12:50:30 +0800 (三, 18  3 2020)\",\"version\":\"r250969\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/web/main/WfProjectController.java\",\"sublogs\":\"\"},{\"name\":\"shaoliyao\",\"time\":\"2020-03-18 12:50:30 +0800 (三, 18  3 2020)\",\"version\":\"r250969\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/web/query/BdcZhInfoController.java\",\"sublogs\":\"\"},{\"name\":\"shaoliyao\",\"time\":\"2020-03-18 12:50:30 +0800 (三, 18  3 2020)\",\"version\":\"r250969\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/resources/META-INF/conf/bdcdj/application.properties\",\"sublogs\":\"\"},{\"name\":\"shaoliyao\",\"time\":\"2020-03-18 12:50:30 +0800 (三, 18  3 2020)\",\"version\":\"r250969\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/resources/conf/bdcdj-mybatis/BdcZhInfoQuery.xml\",\"sublogs\":\"\"},{\"name\":\"shaoliyao\",\"time\":\"2020-03-18 12:50:30 +0800 (三, 18  3 2020)\",\"version\":\"r250969\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/resources/conf/spring/bdcdj-config-cas.xml\",\"sublogs\":\"\"}]");
-                    self.tableData = [];
-                    self.tableData = arry;
-                    // for(var i =0 ;i<arry.length ;i++){
-                    //     self.tableData[i]=arry[i];
-                    // }
+                this.drawer = true
 
-                });
+            },
+            handleClose(done) {
+                this.$confirm('确认关闭？')
+                    .then(_ => {
+                        done();
+                    })
+                    .catch(_ => {});
             }
         }
     }

@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"github.com/axgle/mahonia"
 	"github.com/leaanthony/mewn"
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails"
+	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -14,9 +16,6 @@ import (
 	"strings"
 )
 
-func basic() string {
-	return "Hello World!"
-}
 
 //本项目的物理地址
 var runningPath string
@@ -37,6 +36,14 @@ var SubLogs string
 
 //========================
 func main() {
+
+	//var k []string
+	//k = append(k,"/c" )
+	//k = append(k,"cd D:\\1-WorkSpace\\0_SvnProject\\bdcdj && d: && mvn clean && mvn install" )
+	//
+	//
+	//CmdAndChangeDirToShow("dir string", "cmd.exe", k)
+
 
 	js := mewn.String("./frontend/dist/app.js")
 	css := mewn.String("./frontend/dist/app.css")
@@ -94,41 +101,29 @@ func sub(projectname string, kssj string, jssj string, czr string) string {
 			break
 		}
 	}
+	var logs string
 	sysType := runtime.GOOS
 	var output []byte
 	var err error
 	var command string
-	var enc mahonia.Decoder
-	enc = mahonia.NewDecoder("gbk")
 	if sysType == "windows" {
-		fmt.Println("WIN")
-		fmt.Println(selectedProject.Dir_path)
-		fmt.Println(selectedProject.Dir_path[0:2])
-
-		//command := `` + runningPath + `/resource/log.bat ` + selectedProject.Dir_path +` ` +selectedProject.Dir_path[0:2] +` `+ ` ""` + kssj + `" "` + jssj + `" .`
-		//cmd := exec.Command("cmd.exe",  command)
-		//output, err = cmd.Output()
+		//fmt.Println("WIN")
+		var enc mahonia.Decoder
+		enc = mahonia.NewDecoder("gbk")
 		cmd := exec.Command("cmd.exe", "/c", "cd "+selectedProject.Dir_path+" && "+selectedProject.Dir_path[0:2]+`&&svn log -r {`+strings.Replace(kssj, " ", "T", -1)+`}:{`+strings.Replace(jssj, " ", "T", -1)+`} -v`)
 		output, err = cmd.Output()
-
+		logs = enc.ConvertString(string(output))
 	} else {
 		command := `` + runningPath + `/resource/log.sh ` + selectedProject.Dir_path + ` ` + strings.Replace(kssj, " ", "T", -1) + ` ` + strings.Replace(jssj, " ", "T", -1) + ` .`
 		cmd := exec.Command("/bin/bash", "-c", command)
 		output, err = cmd.Output()
-
+		logs = string(output)
 	}
 	if err != nil {
 		fmt.Printf("Execute Shell:%s failed with error:%s", command, err.Error())
 	}
-	//获取返回日志
-	var kk = string(output)
-	kk = enc.ConvertString(kk)
-	//fmt.Println("UTF-8 to GBK:", enc.ConvertString(kk))
-	fmt.Println(kk)
-
-	//fmt.Println(kk)
 	//找到的所有日志
-	baseLog := strings.Split(kk, "------------------------------------------------------------------------")
+	baseLog := strings.Split(logs, "------------------------------------------------------------------------")
 	//筛选之后的日志
 	var searchLog []string
 	for _, s := range baseLog {
@@ -140,25 +135,15 @@ func sub(projectname string, kssj string, jssj string, czr string) string {
 	SubLogs = ""
 	var svnInfoTemp SvnInfo
 	li := []SvnInfo{}
-	fmt.Println(len(searchLog))
 	for _, s := range searchLog {
 		svnInfoTemp = SvnInfo{}
-		fmt.Println("==:" + s + ":==")
 		if s == "" {
-			fmt.Println("不操作")
 			continue
 		}
-		fmt.Println("   ")
 		res1 := strings.Split(s, "\n")
 		isSvnFiles := false
 		isSvnLogLine := -1
 		for i, s2 := range res1 {
-			fmt.Println("1==================1:")
-			sss :="开始"+s2+"完"
-			fmt.Println(sss)
-			fmt.Println(len(s2))
-			fmt.Println("2===============2")
-
 			if strings.Contains(s2, czr) && strings.Contains(s2, "|") {
 				uAt := strings.Split(res1[i], "|")
 				svnInfoTemp.Name = strings.TrimSpace(uAt[1])
@@ -168,22 +153,16 @@ func sub(projectname string, kssj string, jssj string, czr string) string {
 			if i != 0 && i != len(res1)-1 && s2 == "" {
 				isSvnLogLine = i
 			}
-			if len(s2) == 1 || s2=="" {
-				fmt.Println("不是文件了")
+			if len(s2) == 1 || s2 == "" {
 				isSvnFiles = false
 				continue
 			}
 			if strings.Contains(s2, "Changed paths:") {
-				fmt.Println("可以是文件了")
 				isSvnFiles = true
 				continue
 			}
 			if isSvnFiles {
-
 				svnInfoTemp.Path = s2[4:]
-
-				fmt.Println("33=======↓33")
-				fmt.Println(svnInfoTemp)
 				li = append(li, svnInfoTemp)
 			}
 
@@ -209,7 +188,7 @@ func sub(projectname string, kssj string, jssj string, czr string) string {
 	if err == nil {
 	}
 	str := string(lang)
-	fmt.Println(str)
+	//fmt.Println(str)
 	return str
 }
 
@@ -230,10 +209,7 @@ func projectName() string {
 }
 
 func getPaths() string {
-
-	str := "[{\"name\":\"zyy\",\"time\":\"2020-03-20 15:51:55 +0800 (五, 20  3 2020)\",\"version\":\"r251597\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/resources/META-INF/conf/bdcdj/application.properties\",\"sublogs\":\"\"},{\"name\":\"zyy\",\"time\":\"2020-03-21 14:06:08 +0800 (六, 21  3 2020)\",\"version\":\"r251734\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/service/impl/JzReadHtxxServiceImpl.java\",\"sublogs\":\"\"}]"
-	//fmt.Println(str)
-	return str
+return ""
 }
 
 type SvnInfo struct {
@@ -271,4 +247,35 @@ type Confs struct {
 	Svn_path string
 	Out_path string
 	Name     string
+}
+
+func CmdAndChangeDirToShow(dir string, commandName string, params []string) error {
+	//cmd := exec.Command("cmd.exe", "/c", "cd D:\\1-WorkSpace\\0_SvnProject\\bdcdj && d: && dir")
+
+	cmd := exec.Command(commandName, params...)
+	fmt.Println("CmdAndChangeDirToFile", dir, cmd.Args)
+	//StdoutPipe方法返回一个在命令Start后与命令标准输出关联的管道。Wait方法获知命令结束后会关闭这个管道，一般不需要显式的关闭该管道。
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Println("cmd.StdoutPipe: ", err)
+		return err
+	}
+	cmd.Stderr = os.Stderr
+	//cmd.Dir = dir
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+	//创建一个流来读取管道内内容，这里逻辑是通过一行一行的读取的
+	reader := bufio.NewReader(stdout)
+	//实时循环读取输出流中的一行内容
+	for {
+		line, err2 := reader.ReadString('\n')
+		if err2 != nil || io.EOF == err2 {
+			break
+		}
+		fmt.Println(line)
+	}
+	err = cmd.Wait()
+	return err
 }
