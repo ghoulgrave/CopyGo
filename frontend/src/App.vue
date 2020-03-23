@@ -6,7 +6,6 @@
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
 import LogsTable from "./components/LogsTable.vue";
 import "./assets/css/main.css";
 
