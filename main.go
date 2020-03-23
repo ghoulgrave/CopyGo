@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/axgle/mahonia"
 	"github.com/leaanthony/mewn"
 	"github.com/spf13/viper"
 	"github.com/wailsapp/wails"
@@ -94,17 +95,36 @@ func sub(projectname string, kssj string, jssj string, czr string) string {
 		}
 	}
 	sysType := runtime.GOOS
+	var output []byte
+	var err error
+	var command string
+	var enc mahonia.Decoder
+	enc = mahonia.NewDecoder("gbk")
 	if sysType == "windows" {
 		fmt.Println("WIN")
+		fmt.Println(selectedProject.Dir_path)
+		fmt.Println(selectedProject.Dir_path[0:2])
+
+		//command := `` + runningPath + `/resource/log.bat ` + selectedProject.Dir_path +` ` +selectedProject.Dir_path[0:2] +` `+ ` ""` + kssj + `" "` + jssj + `" .`
+		//cmd := exec.Command("cmd.exe",  command)
+		//output, err = cmd.Output()
+		cmd := exec.Command("cmd.exe", "/c", "cd "+selectedProject.Dir_path+" && "+selectedProject.Dir_path[0:2]+`&&svn log -r {`+strings.Replace(kssj, " ", "T", -1)+`}:{`+strings.Replace(jssj, " ", "T", -1)+`} -v`)
+		output, err = cmd.Output()
+
+	} else {
+		command := `` + runningPath + `/resource/log.sh ` + selectedProject.Dir_path + ` ` + strings.Replace(kssj, " ", "T", -1) + ` ` + strings.Replace(jssj, " ", "T", -1) + ` .`
+		cmd := exec.Command("/bin/bash", "-c", command)
+		output, err = cmd.Output()
+
 	}
-	command := `` + runningPath + `/resource/log.sh ` + selectedProject.Dir_path + ` ` + strings.Replace(kssj, " ", "T", -1) + ` ` + strings.Replace(jssj, " ", "T", -1) + ` .`
-	cmd := exec.Command("/bin/bash", "-c", command)
-	output, err := cmd.Output()
 	if err != nil {
 		fmt.Printf("Execute Shell:%s failed with error:%s", command, err.Error())
 	}
 	//获取返回日志
 	var kk = string(output)
+	kk = enc.ConvertString(kk)
+	//fmt.Println("UTF-8 to GBK:", enc.ConvertString(kk))
+	fmt.Println(kk)
 
 	//fmt.Println(kk)
 	//找到的所有日志
@@ -120,12 +140,25 @@ func sub(projectname string, kssj string, jssj string, czr string) string {
 	SubLogs = ""
 	var svnInfoTemp SvnInfo
 	li := []SvnInfo{}
+	fmt.Println(len(searchLog))
 	for _, s := range searchLog {
 		svnInfoTemp = SvnInfo{}
+		fmt.Println("==:" + s + ":==")
+		if s == "" {
+			fmt.Println("不操作")
+			continue
+		}
+		fmt.Println("   ")
 		res1 := strings.Split(s, "\n")
 		isSvnFiles := false
 		isSvnLogLine := -1
 		for i, s2 := range res1 {
+			fmt.Println("1==================1:")
+			sss :="开始"+s2+"完"
+			fmt.Println(sss)
+			fmt.Println(len(s2))
+			fmt.Println("2===============2")
+
 			if strings.Contains(s2, czr) && strings.Contains(s2, "|") {
 				uAt := strings.Split(res1[i], "|")
 				svnInfoTemp.Name = strings.TrimSpace(uAt[1])
@@ -135,16 +168,22 @@ func sub(projectname string, kssj string, jssj string, czr string) string {
 			if i != 0 && i != len(res1)-1 && s2 == "" {
 				isSvnLogLine = i
 			}
-			if s2 == "" {
+			if len(s2) == 1 || s2=="" {
+				fmt.Println("不是文件了")
 				isSvnFiles = false
 				continue
 			}
-			if s2 == "Changed paths:" {
+			if strings.Contains(s2, "Changed paths:") {
+				fmt.Println("可以是文件了")
 				isSvnFiles = true
 				continue
 			}
 			if isSvnFiles {
+
 				svnInfoTemp.Path = s2[4:]
+
+				fmt.Println("33=======↓33")
+				fmt.Println(svnInfoTemp)
 				li = append(li, svnInfoTemp)
 			}
 
@@ -170,7 +209,7 @@ func sub(projectname string, kssj string, jssj string, czr string) string {
 	if err == nil {
 	}
 	str := string(lang)
-	//fmt.Println(str)
+	fmt.Println(str)
 	return str
 }
 
