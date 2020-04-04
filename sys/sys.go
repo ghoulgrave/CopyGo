@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path"
 	"strings"
-	"time"
 )
 
 // Stats .
@@ -85,6 +84,6 @@ func (s *Stats) CmdAndChangeDirToShow(dir string, commandName string, params []s
 
 	}
 	err = cmd.Wait()
-	time.Sleep(5 * time.Second)
+	s.runtime.Events.Emit("cpu_usage", s.GetOuts("[COPY-INFO] All Done ."))
 	return err
 }

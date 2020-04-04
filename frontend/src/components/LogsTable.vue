@@ -1,27 +1,49 @@
 <template>
-    <div style="margin-top: 20px">
-        <el-form :inline="true" :model="formInline" class="demo-form-inline">
-            <el-form-item label="项目信息">
-                <el-select v-model="formInline.project" placeholder="项目信息">
-                    <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
-                    </el-option>
-                </el-select>
-            </el-form-item>
-            <el-form-item label="开始时间">
-                <el-input v-model="formInline.kssj" placeholder="开始时间"></el-input>
-            </el-form-item>
-            <el-form-item label="结束时间">
-                <el-input v-model="formInline.jssj" placeholder="结束时间"></el-input>
-            </el-form-item>
-            <el-form-item label="操作人">
-                <el-input v-model="formInline.czr" placeholder="操作人"></el-input>
-            </el-form-item>
-            <el-form-item>
-                <el-button type="primary" @click="onSubmit">查询</el-button>
-            </el-form-item>
-        </el-form>
-        <!-- <el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button> -->
-        <el-button @click="datas()">come on baby ！{{ series }}</el-button>
+    <el-container>
+        <el-header>
+            <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
+                <el-menu-item index="1">处理中心</el-menu-item>
+                <el-submenu index="2">
+                    <template slot="title">配置信息</template>
+                    <el-menu-item index="2-1">项目配置</el-menu-item>
+                    <el-menu-item index="2-2">系统配置</el-menu-item>
+                    <!--                    <el-menu-item index="2-3">选项3</el-menu-item>-->
+                    <!--                    <el-submenu index="2-4">-->
+                    <!--                        <template slot="title">选项4</template>-->
+                    <!--                        <el-menu-item index="2-4-1">选项1</el-menu-item>-->
+                    <!--                        <el-menu-item index="2-4-2">选项2</el-menu-item>-->
+                    <!--                        <el-menu-item index="2-4-3">选项3</el-menu-item>-->
+                    <!--                    </el-submenu>-->
+                </el-submenu>
+                <el-menu-item index="3">帮助中心</el-menu-item>
+                <el-menu-item index="4">联系反馈</el-menu-item>
+            </el-menu>
+        </el-header>
+        <el-main style="margin-top: 1px;">
+            <div v-if="tab1" style="margin-top: 2px">
+                <el-form :inline="true" :model="formInline" class="demo-form-inline">
+                    <el-form-item label="项目信息">
+                        <el-select v-model="formInline.project" placeholder="项目信息">
+                            <el-option v-for="item in options" :key="item.value" :label="item.label"
+                                       :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="开始时间">
+                        <el-input v-model="formInline.kssj" placeholder="开始时间"></el-input>
+                    </el-form-item>
+                    <el-form-item label="结束时间">
+                        <el-input v-model="formInline.jssj" placeholder="结束时间"></el-input>
+                    </el-form-item>
+                    <el-form-item label="操作人">
+                        <el-input v-model="formInline.czr" placeholder="操作人"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="onSubmit">查询</el-button>
+                    </el-form-item>
+                </el-form>
+                <!-- <el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button> -->
+                <el-button @click="datas()">come on baby ！</el-button>
                 <el-table
                         ref="multipleTable"
                         :data="tableData"
@@ -55,29 +77,58 @@
                             show-overflow-tooltip>
                     </el-table-column>
                 </el-table>
-
-
-        <el-drawer
-                title="编译情况"
-                :visible.sync="drawer"
-                :direction="direction"
-                :before-close="handleClose" size="99%">
-            <div style="height: 800px ">
-                <!-- 注意需要给 el-scrollbar 设置高度，判断是否滚动是看它的height判断的 -->
-                <el-scrollbar style="height: 100%;"> <!-- 滚动条 -->
-                        <p style="white-space: pre-line;color: #303133;text-align: left;">{{ message }}</p>
-                </el-scrollbar><!-- /滚动条 -->
+                <el-drawer
+                        title="编译情况"
+                        :visible.sync="drawer"
+                        :direction="direction"
+                        :before-close="handleClose" size="99%">
+                    <div style="height: 800px ">
+                        <!-- 注意需要给 el-scrollbar 设置高度，判断是否滚动是看它的height判断的 -->
+                        <el-scrollbar ref="myScrollbar" style="height: 100%;"> <!-- 滚动条 -->
+                            <p style="white-space: pre-line;color: #303133;text-align: left;">{{ message }}</p>
+                        </el-scrollbar><!-- /滚动条 -->
+                    </div>
+                </el-drawer>
             </div>
-        </el-drawer>
-    </div>
+            <div v-if="tab2_1" style="margin-top: 2px">
+                <p style="white-space: pre-line;color: #303133;text-align: left;">项目信息</p>
+            </div>
+            <div v-if="tab2_2" style="margin-top: 2px">
+                <p style="white-space: pre-line;color: #303133;text-align: left;">系统信息</p>
+            </div>
+            <div v-if="tab3" style="margin-top: 2px">
+                <p style="white-space: pre-line;color: #303133;text-align: left;">帮助中心</p>
+                <p style="white-space: pre-line;color: #303133;text-align: left;">
+                    1.
+                    2.
+
+
+
+                </p>
+
+            </div>
+            <div v-if="tab4" style="margin-top: 2px">
+                <p style="white-space: pre-line;color: #303133;text-align: left;">联系反馈</p>
+                <p style="white-space: pre-line;color: #303133;text-align: left;">有问题请联系：zhangyiyang@gtmap.cn</p>
+            </div>
+        </el-main>
+    </el-container>
+
+
 </template>
 
 <script>
     export default {
         data() {
             return {
-                message:'',
-                series:'',
+                tab1: true,
+                tab2_1: false,
+                tab2_2: false,
+                tab3: false,
+                tab4: false,
+                activeIndex: '1',
+                message: '',
+                series: '',
                 drawer: false,
                 //direction: 'rtl',//从右往左开
                 //direction: 'ltr',//从左往右开
@@ -87,8 +138,8 @@
                 formInline: {
                     user: '',
                     project: '',
-                    kssj: '2020-03-18 08:50:39',
-                    jssj: '2020-03-22 08:50:39',
+                    kssj: this.formartDate("day","first"),
+                    jssj: this.formartDate("day","end"),
                     czr: ''
                 },
                 options: [],
@@ -98,13 +149,17 @@
         },
         created() {
             this.projectName();
+
         },
-        mounted: function() {
+        updated: function () {
+            this.scrollDown()
+        },
+        mounted: function () {
             //绑定事件可以使用了
             window.wails.Events.On('cpu_usage', cpu_usage => {
                 if (cpu_usage) {
                     //console.log("sss"+cpu_usage.avg);
-                    this.message = this.message+"\n" + cpu_usage.avg;
+                    this.message = this.message + "\n" + cpu_usage.avg;
                 }
             });
         },
@@ -123,7 +178,7 @@
                     var arry = eval(result);
                     this.tableData = [];
                     this.tableData = arry;
-                    this.multipleSelection=[];
+                    this.multipleSelection = [];
                     this.loading = false;
                 });
             },
@@ -147,17 +202,92 @@
                 //window.backend.getPaths().then()
                 window.backend.Stats.GetCom(this.formInline.project).then()
                     .catch(error => {
-                        console.log(error.message);
+                        //console.log(error.message);
                     });
             },
-
             handleClose(done) {
-                this.$confirm('确认关闭？')
+                this.$confirm('关闭此页面无法停止已经运行的编译操作，请慎重')
+                    // eslint-disable-next-line no-unused-vars
                     .then(_ => {
                         done();
+                        this.message = "";
                     })
-                    .catch(_ => {});
+                    // eslint-disable-next-line no-unused-vars
+                    .catch(_ => {
+                    });
+            },
+            scrollDown() {
+                //滚动条处于置底
+                this.$refs['myScrollbar'].wrap.scrollTop = this.$refs['myScrollbar'].wrap.scrollHeight
+            },
+            // eslint-disable-next-line no-unused-vars
+            handleSelect(key, keyPath) {
+                //console.log(key, keyPath);
+                if (key == "1") {
+                    this.tab1 = true;
+                    this.tab2_1 = false;
+                    this.tab2_2 = false;
+                    this.tab3 = false;
+                    this.tab4 = false;
+                }
+                if (key == "2-1") {
+                    this.tab1 = false;
+                    this.tab2_1 = true;
+                    this.tab2_2 = false;
+                    this.tab3 = false;
+                    this.tab4 = false;
+                }
+                if (key == "2-2") {
+                    this.tab1 = false;
+                    this.tab2_1 = false;
+                    this.tab2_2 = true;
+                    this.tab3 = false;
+                    this.tab4 = false;
+                }
+                if (key == "3") {
+                    this.tab1 = false;
+                    this.tab2_1 = false;
+                    this.tab2_2 = false;
+                    this.tab3 = true;
+                    this.tab4 = false;
+                }
+                if (key == "4") {
+                    this.tab1 = false;
+                    this.tab2_1 = false;
+                    this.tab2_2 = false;
+                    this.tab3 = false;
+                    this.tab4 = true;
+                }
+            },
+            formartDate(type, order){
+                var time = new Date();
+                if (type != "day") {
+                    if (order == "first") {
+                        time = new Date(time-10*60*1000) ;
+                    }
+                    if (order == "end") {
+                        time = new Date(time+10*60*1000) ;
+                    }
+                }
+                var y = time.getFullYear();
+                var m = time.getMonth() + 1;
+                var d = time.getDate();
+                var h = time.getHours();
+                var mm = time.getMinutes();
+                var s = time.getSeconds();
+                if (type == "day") {
+                    if (order == "first") {
+                        return y + '-' + this.add0(m) + '-' + this.add0(d) + ' 00:00:00';
+                    } else if (order == "end") {
+                        return y + '-' + this.add0(m) + '-' + this.add0(d) + ' 23:59:59';
+                    }
+                }
+                return y + '-' + this.add0(m) + '-' + this.add0(d) + ' ' + this.add0(h) + ':' + this.add0(mm) + ':' + this.add0(s);
+            },
+            add0(m) {
+                return m < 10 ? '0' + m : m;
             }
         }
     }
+
 </script>
