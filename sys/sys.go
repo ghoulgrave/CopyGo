@@ -2,6 +2,8 @@ package sys
 
 import (
 	"bufio"
+	"copy/logger"
+	"encoding/json"
 	"fmt"
 	"github.com/wailsapp/wails"
 	"io"
@@ -35,23 +37,47 @@ func (s *Stats) GetOuts(k string) *CPUUsage {
 		Average: k,
 	}
 }
-func (s *Stats) GetCom(projectname string) {
-	//var selectedProject Confs
-	//for _, conf := range projectConfs {
-	//	if conf.Name == projectname {
-	//		selectedProject = conf
-	//		break
-	//	}
-	//}
+func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
 
-	s.CmdAndChangeDirToShow("", "", nil)
+	var selectedProject Confs
+	for _, conf := range ProjectConfs {
+		if conf.Name == projectname {
+			selectedProject = conf
+			break
+		}
+	}
+	if selectedProject.Dir_path != "" && isbuild {
+		//s.CmdAndChangeDirToShow(selectedProject.Dir_path, "", nil)
+	} else {
+		s.log.Info("[COPY-INFO] 项目：【" + projectname + "】 文件夹地址没有配置")
+		return
+	}
+
+	k := "[{\"name\":\"zhangyiyang\",\"time\":\"2020-04-03 09:21:31 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254129\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/resources/conf/bdcdj-mybatis/BdcZm.xml\",\"sublogs\":\"\"},{\"name\":\"chenchunxue\",\"time\":\"2020-04-03 10:04:05 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254139\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/utils/Constants.java\",\"sublogs\":\"\"}]"
+	var ss []SvnInfo
+	json.Unmarshal([]byte(k), &ss)
+	fmt.Println("xxxxxx")
+	fmt.Println(len(ss))
+
+	for i := range ss {
+		fmt.Println(ss[i].Path)
+	}
+
+	//fmt.Println(infos)
+	//var ss []SvnInfo
+	//json.Unmarshal([]byte(infos), &ss)
+	//fmt.Println("xxxxxx")
+	//fmt.Println(ss[1].Path)
+
+	logger.Info("fffff")
+
 }
 func (s *Stats) CmdAndChangeDirToShow(dir string, commandName string, params []string) error {
 	//cmd := exec.Command("cmd.exe", "/c", "cd D:\\1-WorkSpace\\0_SvnProject\\bdcdj && d: && dir")
 	ePath, _ := os.Executable()
 	fmt.Println(ePath)
 	runningPath := path.Dir(ePath)
-	command := ` ` + runningPath + `/resource/install.sh ` + "/Users/ghoul/1-svnWork/bdcdj" + ` .`
+	command := ` ` + runningPath + `/resource/install.sh ` + dir + ` .`
 	cmd := exec.Command("/bin/bash", "-c", command)
 
 	//cmd := exec.Command("/bin/bash", "-c", "ls")

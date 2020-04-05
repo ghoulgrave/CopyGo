@@ -68,6 +68,11 @@ func (s *Stats) GetSubmitedLogInfo(projectname string, kssj string, jssj string,
 		command := `` + RunningPath + `/resource/log.sh ` + selectedProject.Dir_path + ` ` + strings.Replace(kssj, " ", "T", -1) + ` ` + strings.Replace(jssj, " ", "T", -1) + ` .`
 		cmd := exec.Command("/bin/bash", "-c", command)
 		output, err = cmd.Output()
+		if err != nil {
+			//Execute Shell: failed with error:exit status
+			fmt.Println(err)
+			fmt.Println("日志获取失败了")
+		}
 		logs = string(output)
 	}
 	if err != nil {
