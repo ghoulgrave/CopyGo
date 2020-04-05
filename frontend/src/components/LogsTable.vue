@@ -122,9 +122,23 @@
             </div>
             <div v-if="tab3_1" style="margin-top: 2px">
                 <p style="white-space: pre-line;color: #303133;text-align: left;">项目信息</p>
+
+
             </div>
             <div v-if="tab3_2" style="margin-top: 2px">
                 <p style="white-space: pre-line;color: #303133;text-align: left;">系统信息</p>
+                <el-form ref="form" :model="sysform" label-width="80px" >
+                    <el-form-item label="用户名称中文">
+                        <el-input v-model="sysform.cname"></el-input>
+                    </el-form-item>
+                    <el-form-item label="用户名称英文">
+                        <el-input v-model="sysform.ename"></el-input>
+                    </el-form-item>
+                    <el-button type="primary" @click="sysOnSubmit">保存信息</el-button>
+                </el-form>
+
+
+
             </div>
             <div v-if="tab4" style="margin-top: 2px">
                 <div style="height: 700px">
@@ -142,7 +156,6 @@
                             * 日志记录问题没有实现
                             * 整包没有实现
                             * 项目信息设置
-                            * 系统信息设置
 
                         </p>
                     </el-scrollbar>
@@ -163,6 +176,10 @@
     export default {
         data() {
             return {
+                sysform:{
+                    cname: '',
+                    ename: '',
+                },
                 checkboxs:[],
                 checks:[],
                 tab1: true,
@@ -218,6 +235,15 @@
             });
         },
         methods: {
+            sysOnSubmit(){
+                window.backend.Stats.UpSysConfig(this.sysform.cname,this.sysform.ename).then(result => {
+                    if(result == '操作成功'){
+                        this.showMessages('操作成功！'+'请重启。', 'info')
+                    }else {
+                        this.showMessages("操作失败了，请重新操作", 'warning')
+                    }
+                });
+            },
             //获取项目列表
             projectName() {
                 window.backend.Stats.GetProjectName().then(result => {

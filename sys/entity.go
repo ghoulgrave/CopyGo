@@ -34,8 +34,9 @@ type Search struct {
 
 //系统展示配置
 type Config struct {
-	Username string
-	Conf     []Confs
+	Username   string
+	Searchname string
+	Conf       []Confs
 }
 
 //项目配置

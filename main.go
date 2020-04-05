@@ -37,17 +37,6 @@ func main() {
 	}
 	viper.Unmarshal(&sys.MyConfig) // 将配置信息绑定到结构体上
 
-	////更新配置文件
-	////fmt.Println(MyConfig)
-	//v := MyConfig.Conf
-	//k := Confs{Sub_path: "http://ssss", Name: "ttttt", Dir_path: "/user/dfds/sdfsfd", Out_path: "/sss.dd/fffs/affd"}
-	//v = append(v, k)
-	//viper.Set("conf", v)
-	//
-	//viper.Unmarshal(&MyConfig)
-	////fmt.Println(MyConfig)
-	//viper.WriteConfig()
-
 	sys.ProjectConfs = sys.MyConfig.Conf
 
 	app := wails.CreateApp(&wails.AppConfig{

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/axgle/mahonia"
+	"github.com/spf13/viper"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -158,4 +159,28 @@ func (s *Stats) GetAllProject(projectName string) {
 		}
 	}
 	s.runtime.Events.Emit("builds_pl", s.GetOuts("xxxxx"))
+}
+
+func (s *Stats) UpSysConfig(cname string, ename string) string {
+
+	MyConfig.Username = cname
+	MyConfig.Searchname = ename
+	////更新配置文件
+	////fmt.Println(MyConfig)
+	//v := MyConfig.Conf
+	//k := Confs{Sub_path: "http://ssss", Name: "ttttt", Dir_path: "/user/dfds/sdfsfd", Out_path: "/sss.dd/fffs/affd"}
+	//v = append(v, k)
+	viper.Set("Username", cname)
+	viper.Set("Searchname", ename)
+	//
+	//viper.Unmarshal(&MyConfig)
+	////fmt.Println(MyConfig)
+	err := viper.WriteConfig()
+	if err != nil {
+		fmt.Println(err)
+		return "操作失败"
+	} else {
+		return "操作成功"
+	}
+
 }
