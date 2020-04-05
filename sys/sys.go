@@ -2,6 +2,7 @@ package sys
 
 import (
 	"bufio"
+	"copy/docx"
 	"copy/logger"
 	"encoding/json"
 	"fmt"
@@ -57,23 +58,44 @@ func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
 		return
 	}
 
-	k := "[{\"name\":\"zhangyiyang\",\"time\":\"2020-04-03 09:21:31 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254129\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/resources/conf/bdcdj-mybatis/BdcZm.xml\",\"sublogs\":\"\"},{\"name\":\"chenchunxue\",\"time\":\"2020-04-03 10:04:05 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254139\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/utils/Constants.java\",\"sublogs\":\"\"}]"
-	var ss []SvnInfo
-	json.Unmarshal([]byte(k), &ss)
-	//fmt.Println("xxxxxx")
-	//fmt.Println(len(ss))
-	s.Copyfiles(selectedProject, ss)
-
 	//fmt.Println(infos)
 	//var ss []SvnInfo
 	//json.Unmarshal([]byte(infos), &ss)
 	//fmt.Println("xxxxxx")
 	//fmt.Println(ss[1].Path)
 
+	k := "[{\"name\":\"zhangyiyang\",\"time\":\"2020-04-03 09:21:31 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254129\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/resources/conf/bdcdj-mybatis/BdcZm.xml\",\"sublogs\":\"\"},{\"name\":\"chenchunxue\",\"time\":\"2020-04-03 10:04:05 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254139\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/utils/Constants.java\",\"sublogs\":\"\"}]"
+	var ss []SvnInfo
+	json.Unmarshal([]byte(k), &ss)
+	//fmt.Println("xxxxxx")
+	//fmt.Println(len(ss))
+	dateNow, _ := s.Copyfiles(selectedProject, ss)
+
+	fmt.Println(dateNow)
+	//fmt.Println(fileDirPath)
+	//fmt.Println(iNum)
+	//复制jar文件
+
+	//复制docx并替换
+	pathSeparator := string(os.PathSeparator)
+	r, err := docx.ReadDocxFile(RunningPath + pathSeparator + "resource" + pathSeparator + "template.docx")
+	if err != nil {
+		panic(err)
+	}
+	docx1 := r.Editable()
+
+	docx1.Replace("zyy_bxr", "new_1_1", -1)
+	docx1.Replace("zyysj_bxr", "new_1_2", -1)
+	docx1.Replace("logs", "new_1_5", -1)
+	docx1.Replace("Zyy_xqbh", "new_1_6", -1)
+	docx1.Replace("Zyy_subSvnPath", "new_1_7", -1)
+	docx1.WriteToFile(selectedProject.Out_path + pathSeparator + dateNow + pathSeparator + "更新说明文档-" + dateNow + ".docx")
+	r.Close()
+
 	logger.Info("fffff")
 
 }
-func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) {
+func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) (dateNow string, err error) {
 	//获取项目路径
 	pathSeparator := string(os.PathSeparator)
 	baseUrl := projectConf.Dir_path
@@ -81,6 +103,7 @@ func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) {
 	//fmt.Println(baseUrl)
 	var file os.FileInfo
 	var fileType string
+	var iNum = int64(0)
 	files, _ := ioutil.ReadDir(baseUrl)
 	if len(files) > 0 {
 		for i := range files {
@@ -98,24 +121,24 @@ func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) {
 		}
 	} else {
 		fmt.Println("无文件")
-		return
+		//return
 	}
 	if file == nil {
 		fmt.Println("没找到jar 或 war 文件")
-		return
+		//return
 	}
 
 	fileDirPath := strings.ReplaceAll(file.Name(), "."+fileType, "")
 	dirExist, fileDir, _ := PathExists(baseUrl + pathSeparator + fileDirPath)
 	if !dirExist {
 		fmt.Println("文件夹不存在")
-		return
+		//return
 	}
 	if !fileDir.IsDir() {
 		fmt.Println("找到的不是文件夹")
-		return
+		//return
 	}
-	dateNow := time.Now().Format("20060102150405")
+	dateNow = time.Now().Format("20060102150405")
 	for _, info := range checkedInfos {
 		stringTemp := strings.Split(info.Path, pathSeparator)
 		var _fileurl string
@@ -184,15 +207,16 @@ func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) {
 						//fmt.Println("copy to : " + strings.Replace(uTo, pathSeparator+lastStr, "", -1) + pathSeparator + fileInfo.Name())
 						//fmt.Println("copy ffrom : ", pFrom+pathSeparator+fileInfo.Name())
 						CopyFile(strings.Replace(uTo, pathSeparator+lastStr, "", -1)+pathSeparator+fileInfo.Name(), pFrom+pathSeparator+fileInfo.Name())
+						iNum = iNum + 1
 					}
 				}
 			} else {
 				CopyFile(uTo, uFrom)
+				iNum = iNum + 1
 			}
 		}
-
 	}
-	fmt.Println(dateNow)
+	return dateNow, nil
 }
 
 func (s *Stats) CmdAndChangeDirToShow(dir string, commandName string, params []string) error {
