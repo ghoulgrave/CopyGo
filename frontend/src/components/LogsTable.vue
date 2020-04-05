@@ -1,9 +1,10 @@
 <template>
+
     <el-container>
         <el-header>
             <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
-                <el-menu-item index="1">单项目处理中心</el-menu-item>
-                <el-menu-item index="2">单项目处理中心</el-menu-item>
+                <el-menu-item index="1">单个项目处理</el-menu-item>
+                <el-menu-item index="2">批量项目处理</el-menu-item>
                 <el-submenu index="3">
                     <template slot="title">配置信息</template>
                     <el-menu-item index="3-1">项目配置</el-menu-item>
@@ -96,6 +97,28 @@
             </div>
             <div v-if="tab2" style="margin-top: 2px">
                 <p style="white-space: pre-line;color: #303133;text-align: left;">批量处理</p>
+
+
+
+                 <el-checkbox-group v-model="checks" class="checkGroup" >
+                 <el-checkbox v-for="(item) in checkboxs" :label="item.value" :key="item.value" @change="handleCheckedChange">{{item.value}}</el-checkbox>
+                 </el-checkbox-group>
+
+
+                <el-button @click="Alldatas()">批量打包文件</el-button>
+
+                <el-drawer
+                        title="批量编译情况"
+                        :visible.sync="drawer_pl"
+                        :direction="direction_pl"
+                        :before-close="handleClose" size="99%">
+                    <div style="height: 800px ">
+                        <!-- 注意需要给 el-scrollbar 设置高度，判断是否滚动是看它的height判断的 -->
+                        <el-scrollbar ref="myScrollbar_pl" style="height: 100%;"> <!-- 滚动条 -->
+                            <p style="white-space: pre-line;color: #303133;text-align: left;">{{ message_pl }}</p>
+                        </el-scrollbar><!-- /滚动条 -->
+                    </div>
+                </el-drawer>
             </div>
             <div v-if="tab3_1" style="margin-top: 2px">
                 <p style="white-space: pre-line;color: #303133;text-align: left;">项目信息</p>
@@ -104,13 +127,26 @@
                 <p style="white-space: pre-line;color: #303133;text-align: left;">系统信息</p>
             </div>
             <div v-if="tab4" style="margin-top: 2px">
-                <p style="white-space: pre-line;color: #303133;text-align: left;">帮助中心</p>
-                <p style="white-space: pre-line;color: #303133;text-align: left;">
-                    1.
-                    2.
+                <div style="height: 700px">
+                    <el-scrollbar style="height: 100%;">
+                        <p style="white-space: pre-line;color: #303133;text-align: left;">帮助中心</p>
+                        <p style="white-space: pre-line;color: #303133;text-align: left;">
+                            1.
+                            2.
 
 
-                </p>
+                        </p>
+                        <p style="white-space: pre-line;color: #303133;text-align: left;">已知问题</p>
+                        <p style="white-space: pre-line;color: #303133;text-align: left;">
+                            * jar包打包没实现
+                            * 日志记录问题没有实现
+                            * 整包没有实现
+                            * 项目信息设置
+                            * 系统信息设置
+
+                        </p>
+                    </el-scrollbar>
+                </div>
 
             </div>
             <div v-if="tab5" style="margin-top: 2px">
@@ -127,6 +163,8 @@
     export default {
         data() {
             return {
+                checkboxs:[],
+                checks:[],
                 tab1: true,
                 tab2: false,
                 tab3_1: false,
@@ -135,12 +173,14 @@
                 tab5: false,
                 activeIndex: '1',
                 message: '',
-                series: '',
                 drawer: false,
                 //direction: 'rtl',//从右往左开
                 //direction: 'ltr',//从左往右开
                 //direction: 'ttb',//从上往下开
                 direction: 'btt',//从下往上开
+                message_pl: '',
+                drawer_pl: false,
+                direction_pl:'ttb',
                 loading: false,
                 formInline: {
                     user: '',
@@ -169,6 +209,13 @@
                     this.message = this.message + "\n" + cpu_usage.avg;
                 }
             });
+            //绑定事件可以使用了
+            window.wails.Events.On('builds_pl', s => {
+                if (s) {
+                    //console.log("sss"+cpu_usage.avg);
+                    this.message_pl = this.message_pl + "\n" + s.avg;
+                }
+            });
         },
         methods: {
             //获取项目列表
@@ -176,6 +223,7 @@
                 window.backend.Stats.GetProjectName().then(result => {
                     this.options = eval(result);
                     this.formInline.project = this.options[0].value;
+                    this.checkboxs = this.options;
                 });
             },
             //提交查询信息填写列表数据
@@ -203,10 +251,22 @@
             handleSelectionChange(val) {
                 this.multipleSelection = val;
             },
+            Alldatas:function(){
+                this.drawer_pl = true
+                if(this.checks.length > 0){
+                    var k =""
+                    this.checks.forEach(s =>{
+                        k+=s+"^";
+                    })
+                    window.backend.Stats.GetAllProject(k).then()
+                }else{
+                    this.showMessages("没有选中打包项目。", 'warning')
+                }
+            },
             //编译操作
             datas: function () {
                 //window.backend.getPaths().then()
-                //if (this.multipleSelection.length > 0) {
+                if (this.multipleSelection.length > 0) {
                     this.$confirm('此次操作是否需要编译?', '确认信息', {
                         confirmButtonText: '编译',
                         cancelButtonText: '不编译',
@@ -241,9 +301,9 @@
                         // });
                     });
 
-                //}else{
-                //    this.showMessages("需要选中打包的文件。",'warning')
-                //}
+                } else {
+                    this.showMessages("需要选中打包的文件。", 'warning')
+                }
             },
             handleClose(done) {
                 this.$confirm('关闭此页面无法停止已经运行的编译操作，请慎重')
@@ -258,10 +318,15 @@
             },
             scrollDown() {
                 //滚动条处于置底
-                try{
+                try {
                     this.$refs['myScrollbar'].wrap.scrollTop = this.$refs['myScrollbar'].wrap.scrollHeight
                     // eslint-disable-next-line no-empty
-                }catch(e){
+                } catch (e) {
+                }
+                try {
+                    this.$refs['myScrollbar_pl'].wrap.scrollTop = this.$refs['myScrollbar_pl'].wrap.scrollHeight
+                    // eslint-disable-next-line no-empty
+                } catch (e) {
                 }
             },
             // eslint-disable-next-line no-unused-vars
@@ -345,7 +410,7 @@
             add0(m) {
                 return m < 10 ? '0' + m : m;
             },
-            showMessages(msg,type) {
+            showMessages(msg, type) {
                 this.$message({
                     message: msg,
                     type: type

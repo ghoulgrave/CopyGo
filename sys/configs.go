@@ -147,3 +147,15 @@ func (s *Stats) GetSubmitedLogInfo(projectname string, kssj string, jssj string,
 	//fmt.Println(str)
 	return str
 }
+
+//获取所有的项目
+func (s *Stats) GetAllProject(projectName string) {
+
+	projectNames := strings.Split(projectName, "^")
+	for _, name := range projectNames {
+		if name != "" {
+			fmt.Println(name)
+		}
+	}
+	s.runtime.Events.Emit("builds_pl", s.GetOuts("xxxxx"))
+}

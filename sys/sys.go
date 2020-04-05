@@ -32,6 +32,7 @@ func (s *Stats) WailsInit(runtime *wails.Runtime) error {
 	s.log = runtime.Log.New("Stats")
 	s.runtime = runtime
 	runtime.Events.Emit("cpu_usage", s.GetOuts("start"))
+	runtime.Events.Emit("builds_pl", s.GetOuts("start"))
 	return nil
 }
 
@@ -51,7 +52,7 @@ func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
 	}
 	if selectedProject.Dir_path != "" {
 		if isbuild {
-			//s.CmdAndChangeDirToShow(selectedProject.Dir_path, "", nil)
+			s.CmdAndChangeDirToShow(selectedProject.Dir_path, "", nil)
 		}
 	} else {
 		s.log.Info("[COPY-INFO] 项目：【" + projectname + "】 文件夹地址没有配置")
@@ -59,16 +60,16 @@ func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
 	}
 
 	//fmt.Println(infos)
-	//var ss []SvnInfo
-	//json.Unmarshal([]byte(infos), &ss)
+	var ss []SvnInfo
+	json.Unmarshal([]byte(infos), &ss)
 	//fmt.Println("xxxxxx")
 	//fmt.Println(ss[1].Path)
 
-	k := "[{\"name\":\"zhangyiyang\",\"time\":\"2020-04-03 09:21:31 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254129\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/resources/conf/bdcdj-mybatis/BdcZm.xml\",\"sublogs\":\"\"},{\"name\":\"chenchunxue\",\"time\":\"2020-04-03 10:04:05 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254139\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/utils/Constants.java\",\"sublogs\":\"\"}]"
-	var ss []SvnInfo
-	json.Unmarshal([]byte(k), &ss)
-	//fmt.Println("xxxxxx")
-	//fmt.Println(len(ss))
+	//k := "[{\"name\":\"zhangyiyang\",\"time\":\"2020-04-03 09:21:31 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254129\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/resources/conf/bdcdj-mybatis/BdcZm.xml\",\"sublogs\":\"\"},{\"name\":\"chenchunxue\",\"time\":\"2020-04-03 10:04:05 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254139\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/utils/Constants.java\",\"sublogs\":\"\"}]"
+	//var ss []SvnInfo
+	//json.Unmarshal([]byte(k), &ss)
+	////fmt.Println("xxxxxx")
+	////fmt.Println(len(ss))
 	dateNow, _ := s.Copyfiles(selectedProject, ss)
 
 	fmt.Println(dateNow)
@@ -83,12 +84,11 @@ func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
 		panic(err)
 	}
 	docx1 := r.Editable()
-
-	docx1.Replace("zyy_bxr", "new_1_1", -1)
-	docx1.Replace("zyysj_bxr", "new_1_2", -1)
-	docx1.Replace("logs", "new_1_5", -1)
-	docx1.Replace("Zyy_xqbh", "new_1_6", -1)
-	docx1.Replace("Zyy_subSvnPath", "new_1_7", -1)
+	docx1.Replace("zyy_bxr", MyConfig.Username, -1)
+	docx1.Replace("zyysj_bxr", time.Now().Format("2006-01-02"), -1)
+	docx1.Replace("logs", SubLogs, -1)
+	docx1.Replace("Zyy_xqbh", RequsNum, -1)
+	docx1.Replace("Zyy_subSvnPath", selectedProject.Sub_path+"/"+dateNow, -1)
 	docx1.WriteToFile(selectedProject.Out_path + pathSeparator + dateNow + pathSeparator + "更新说明文档-" + dateNow + ".docx")
 	r.Close()
 
