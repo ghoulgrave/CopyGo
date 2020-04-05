@@ -212,8 +212,9 @@
             }
         },
         created() {
-            this.projectName();
-
+            this.projectName()
+            this.getEName()
+            this.getCName()
         },
         updated: function () {
             this.scrollDown()
@@ -250,6 +251,18 @@
                     this.options = eval(result);
                     this.formInline.project = this.options[0].value;
                     this.checkboxs = this.options;
+                });
+            },
+            //获取查询姓名信息
+            getEName(){
+                window.backend.Stats.GetEName().then(result => {
+                    this.sysform.ename = result;
+                });
+            },
+            //获取中文姓名信息
+            getCName() {
+                window.backend.Stats.GetCName().then(result => {
+                    this.sysform.cname = result;
                 });
             },
             //提交查询信息填写列表数据

@@ -44,7 +44,17 @@ func (s *Stats) GetProjectName() string {
 	return vreStr
 }
 
-//已经提交的日志信息
+//获取查询姓名信息
+func (s *Stats) GetEName() string {
+	return MyConfig.Searchname
+}
+
+//获取中文姓名信息
+func (s *Stats) GetCName() string {
+	return MyConfig.Username
+}
+
+//获取已经提交的日志信息
 func (s *Stats) GetSubmitedLogInfo(projectname string, kssj string, jssj string, czr string) string {
 	var selectedProject Confs
 	for _, conf := range ProjectConfs {
@@ -161,6 +171,7 @@ func (s *Stats) GetAllProject(projectName string) {
 	s.runtime.Events.Emit("builds_pl", s.GetOuts("xxxxx"))
 }
 
+//更新系统配置
 func (s *Stats) UpSysConfig(cname string, ename string) string {
 
 	MyConfig.Username = cname
@@ -183,4 +194,9 @@ func (s *Stats) UpSysConfig(cname string, ename string) string {
 		return "操作成功"
 	}
 
+}
+
+func (s *Stats) UpProjectConfig() string {
+
+	return ""
 }
