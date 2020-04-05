@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"github.com/wailsapp/wails"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 	"strings"
+	"time"
 )
 
 // Stats .
@@ -46,8 +48,10 @@ func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
 			break
 		}
 	}
-	if selectedProject.Dir_path != "" && isbuild {
-		//s.CmdAndChangeDirToShow(selectedProject.Dir_path, "", nil)
+	if selectedProject.Dir_path != "" {
+		if isbuild {
+			//s.CmdAndChangeDirToShow(selectedProject.Dir_path, "", nil)
+		}
 	} else {
 		s.log.Info("[COPY-INFO] 项目：【" + projectname + "】 文件夹地址没有配置")
 		return
@@ -56,12 +60,9 @@ func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
 	k := "[{\"name\":\"zhangyiyang\",\"time\":\"2020-04-03 09:21:31 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254129\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/resources/conf/bdcdj-mybatis/BdcZm.xml\",\"sublogs\":\"\"},{\"name\":\"chenchunxue\",\"time\":\"2020-04-03 10:04:05 +0800 (Fri, 03 Apr 2020)\",\"version\":\"r254139\",\"path\":\" /bdcdj/branches/bdcdj_dbqy/src/main/java/cn/gtmap/bdcdj/utils/Constants.java\",\"sublogs\":\"\"}]"
 	var ss []SvnInfo
 	json.Unmarshal([]byte(k), &ss)
-	fmt.Println("xxxxxx")
-	fmt.Println(len(ss))
-
-	for i := range ss {
-		fmt.Println(ss[i].Path)
-	}
+	//fmt.Println("xxxxxx")
+	//fmt.Println(len(ss))
+	s.Copyfiles(selectedProject, ss)
 
 	//fmt.Println(infos)
 	//var ss []SvnInfo
@@ -72,6 +73,128 @@ func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
 	logger.Info("fffff")
 
 }
+func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) {
+	//获取项目路径
+	pathSeparator := string(os.PathSeparator)
+	baseUrl := projectConf.Dir_path
+	baseUrl = baseUrl + pathSeparator + "target"
+	//fmt.Println(baseUrl)
+	var file os.FileInfo
+	var fileType string
+	files, _ := ioutil.ReadDir(baseUrl)
+	if len(files) > 0 {
+		for i := range files {
+			//fmt.Println(files[i].Name())
+			if strings.HasSuffix(files[i].Name(), ".jar") && !strings.Contains(files[i].Name(), "sources") {
+				file = files[i]
+				fileType = "jar"
+				break
+			}
+			if strings.HasSuffix(files[i].Name(), ".war") {
+				file = files[i]
+				fileType = "war"
+				break
+			}
+		}
+	} else {
+		fmt.Println("无文件")
+		return
+	}
+	if file == nil {
+		fmt.Println("没找到jar 或 war 文件")
+		return
+	}
+
+	fileDirPath := strings.ReplaceAll(file.Name(), "."+fileType, "")
+	dirExist, fileDir, _ := PathExists(baseUrl + pathSeparator + fileDirPath)
+	if !dirExist {
+		fmt.Println("文件夹不存在")
+		return
+	}
+	if !fileDir.IsDir() {
+		fmt.Println("找到的不是文件夹")
+		return
+	}
+	dateNow := time.Now().Format("20060102150405")
+	for _, info := range checkedInfos {
+		stringTemp := strings.Split(info.Path, pathSeparator)
+		var _fileurl string
+		var flag = true
+		var _web string
+		//没有扩展名的文件放弃
+		lastStr := stringTemp[len(stringTemp)-1]
+		k := strings.LastIndex(lastStr, ".")
+		if k < 0 {
+			continue
+		}
+
+		for _, s2 := range stringTemp {
+			if flag {
+				if "web" == strings.ToLower(s2) || "webapp" == strings.ToLower(s2) {
+					_web = s2
+					_fileurl += s2
+					flag = !flag
+				} else if "src" == s2 {
+					_fileurl += s2
+					flag = !flag
+				} else {
+				}
+			} else {
+				_fileurl += pathSeparator + s2
+			}
+		}
+		_exten := lastStr[k+1:]
+		//fmt.Println(_exten)
+		if _exten == "java" || _exten == "groovy" {
+			_exten = "class"
+		}
+		//fmt.Println(_exten)
+		if fileType == "jar" {
+			_fileurl = strings.Replace(_fileurl, "src"+pathSeparator+"main"+pathSeparator+"java", "classes", -1)
+			_fileurl = strings.Replace(_fileurl, "src"+pathSeparator+"main"+pathSeparator+"resources", "classes", -1)
+		} else {
+			_fileurl = strings.Replace(_fileurl, "src"+pathSeparator+"main"+pathSeparator+"java", "WEB-INF"+pathSeparator+"classes", -1)
+			_fileurl = strings.Replace(_fileurl, "src"+pathSeparator+"main"+pathSeparator+"resources", "WEB-INF"+pathSeparator+"classes", -1)
+		}
+		if _web != "" {
+			_fileurl = strings.Replace(_fileurl, _web+pathSeparator, "", -1)
+		}
+
+		uFrom := baseUrl + pathSeparator + fileDirPath + pathSeparator + _fileurl
+		if fileType == "jar" {
+			uFrom = baseUrl + "\\" + _fileurl
+		}
+		//fmt.Println(uFrom)
+		uTo := projectConf.Out_path + pathSeparator + dateNow + pathSeparator + fileDirPath + pathSeparator + _fileurl
+		if fileType == "jar" {
+			uTo = projectConf.Out_path + pathSeparator + dateNow + pathSeparator + fileDirPath + pathSeparator + "BOOT-INF" + pathSeparator + _fileurl
+		}
+		os.MkdirAll(strings.Replace(uTo, lastStr, "", -1), 0777)
+		//fmt.Println(uTo)
+		pFrom := strings.Replace(uFrom, pathSeparator+lastStr, "", -1)
+		//fmt.Println(pFrom)
+		_, err := os.Stat(pFrom)
+		if err == nil {
+			if _exten == "class" {
+				fileNameTemp := lastStr[:strings.LastIndex(lastStr, ".")]
+				filesTemp, _ := ioutil.ReadDir(pFrom)
+				for _, fileInfo := range filesTemp {
+					if strings.HasPrefix(fileInfo.Name(), fileNameTemp) && strings.HasSuffix(fileInfo.Name(), "."+_exten) {
+						//fmt.Println("mmm:" + fileInfo.Name())
+						//fmt.Println("copy to : " + strings.Replace(uTo, pathSeparator+lastStr, "", -1) + pathSeparator + fileInfo.Name())
+						//fmt.Println("copy ffrom : ", pFrom+pathSeparator+fileInfo.Name())
+						CopyFile(strings.Replace(uTo, pathSeparator+lastStr, "", -1)+pathSeparator+fileInfo.Name(), pFrom+pathSeparator+fileInfo.Name())
+					}
+				}
+			} else {
+				CopyFile(uTo, uFrom)
+			}
+		}
+
+	}
+	fmt.Println(dateNow)
+}
+
 func (s *Stats) CmdAndChangeDirToShow(dir string, commandName string, params []string) error {
 	//cmd := exec.Command("cmd.exe", "/c", "cd D:\\1-WorkSpace\\0_SvnProject\\bdcdj && d: && dir")
 	ePath, _ := os.Executable()
@@ -112,4 +235,28 @@ func (s *Stats) CmdAndChangeDirToShow(dir string, commandName string, params []s
 	err = cmd.Wait()
 	s.runtime.Events.Emit("cpu_usage", s.GetOuts("[COPY-INFO] All Done ."))
 	return err
+}
+
+func PathExists(path string) (bool, os.FileInfo, error) {
+	file, err := os.Stat(path)
+	if err == nil {
+		return true, file, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil, nil
+	}
+	return false, nil, err
+}
+func CopyFile(dstName, srcName string) (written int64, err error) {
+	src, err := os.Open(srcName)
+	if err != nil {
+		return
+	}
+	defer src.Close()
+	dst, err := os.OpenFile(dstName, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return
+	}
+	defer dst.Close()
+	return io.Copy(dst, src)
 }

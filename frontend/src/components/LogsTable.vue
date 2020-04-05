@@ -128,7 +128,7 @@
         data() {
             return {
                 tab1: true,
-                tab2: true,
+                tab2: false,
                 tab3_1: false,
                 tab3_2: false,
                 tab4: false,
@@ -206,7 +206,7 @@
             //编译操作
             datas: function () {
                 //window.backend.getPaths().then()
-                if (this.multipleSelection.length > 0) {
+                //if (this.multipleSelection.length > 0) {
                     this.$confirm('此次操作是否需要编译?', '确认信息', {
                         confirmButtonText: '编译',
                         cancelButtonText: '不编译',
@@ -241,9 +241,9 @@
                         // });
                     });
 
-                }else{
-                    this.showMessages("需要选中打包的文件。",'warning')
-                }
+                //}else{
+                //    this.showMessages("需要选中打包的文件。",'warning')
+                //}
             },
             handleClose(done) {
                 this.$confirm('关闭此页面无法停止已经运行的编译操作，请慎重')
