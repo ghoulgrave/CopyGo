@@ -36,6 +36,7 @@ type Search struct {
 type Config struct {
 	Username   string
 	Searchname string
+	Jarnames   []string
 	Conf       []Confs
 }
 

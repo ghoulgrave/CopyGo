@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"github.com/axgle/mahonia"
 	"github.com/spf13/viper"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
 )
 
 //全局参数
+//地址分割符
+var PathSeparator = string(os.PathSeparator)
+
 //本项目的物理地址
 var RunningPath string
 
@@ -29,7 +33,7 @@ var RequsNum string
 var SubLogs string
 
 //获取项目信息
-func (s *Stats) GetProjectName() string {
+func (s *ThisCopy) GetProjectName() string {
 	myConfs := MyConfig.Conf
 	vreStr := "["
 	for i, conf := range myConfs {
@@ -45,17 +49,17 @@ func (s *Stats) GetProjectName() string {
 }
 
 //获取查询姓名信息
-func (s *Stats) GetEName() string {
+func (s *ThisCopy) GetEName() string {
 	return MyConfig.Searchname
 }
 
 //获取中文姓名信息
-func (s *Stats) GetCName() string {
+func (s *ThisCopy) GetCName() string {
 	return MyConfig.Username
 }
 
 //获取已经提交的日志信息
-func (s *Stats) GetSubmitedLogInfo(projectname string, kssj string, jssj string, czr string) string {
+func (s *ThisCopy) GetSubmitedLogInfo(projectname string, kssj string, jssj string, czr string) string {
 	var selectedProject Confs
 	for _, conf := range ProjectConfs {
 		if conf.Name == projectname {
@@ -160,7 +164,7 @@ func (s *Stats) GetSubmitedLogInfo(projectname string, kssj string, jssj string,
 }
 
 //获取所有的项目
-func (s *Stats) GetAllProject(projectName string) {
+func (s *ThisCopy) GetAllProject(projectName string) {
 
 	projectNames := strings.Split(projectName, "^")
 	for _, name := range projectNames {
@@ -172,7 +176,7 @@ func (s *Stats) GetAllProject(projectName string) {
 }
 
 //更新系统配置
-func (s *Stats) UpSysConfig(cname string, ename string) string {
+func (s *ThisCopy) UpSysConfig(cname string, ename string) string {
 
 	MyConfig.Username = cname
 	MyConfig.Searchname = ename
@@ -196,7 +200,7 @@ func (s *Stats) UpSysConfig(cname string, ename string) string {
 
 }
 
-func (s *Stats) UpProjectConfig() string {
+func (s *ThisCopy) UpProjectConfig() string {
 
 	return ""
 }

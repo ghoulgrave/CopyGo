@@ -49,7 +49,7 @@ func main() {
 		Resizable: true,
 	})
 
-	stats := &sys.Stats{}
-	app.Bind(stats)
+	thiscopy := &sys.ThisCopy{}
+	app.Bind(thiscopy)
 	app.Run()
 }

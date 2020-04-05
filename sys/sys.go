@@ -1,6 +1,7 @@
 package sys
 
 import (
+	"archive/zip"
 	"bufio"
 	"copy/docx"
 	"copy/logger"
@@ -12,37 +13,37 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
-// Stats .
-type Stats struct {
+// thisCopy .
+type ThisCopy struct {
 	log     *wails.CustomLogger
 	runtime *wails.Runtime
 }
 
-// CPUUsage .
-type CPUUsage struct {
-	Average string `json:"avg"`
+// TimesStruct .
+type TimesStruct struct {
+	Str string `json:"str"`
 }
 
 // WailsInit .
-func (s *Stats) WailsInit(runtime *wails.Runtime) error {
-	s.log = runtime.Log.New("Stats")
+func (s *ThisCopy) WailsInit(runtime *wails.Runtime) error {
+	s.log = runtime.Log.New("ThisCopy")
 	s.runtime = runtime
 	runtime.Events.Emit("cpu_usage", s.GetOuts("start"))
 	runtime.Events.Emit("builds_pl", s.GetOuts("start"))
 	return nil
 }
 
-func (s *Stats) GetOuts(k string) *CPUUsage {
-	return &CPUUsage{
-		Average: k,
+func (s *ThisCopy) GetOuts(k string) *TimesStruct {
+	return &TimesStruct{
+		Str: k,
 	}
 }
-func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
-
+func (s *ThisCopy) GetCom(projectname string, infos string, isbuild bool) {
 	var selectedProject Confs
 	for _, conf := range ProjectConfs {
 		if conf.Name == projectname {
@@ -70,16 +71,21 @@ func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
 	//json.Unmarshal([]byte(k), &ss)
 	////fmt.Println("xxxxxx")
 	////fmt.Println(len(ss))
-	dateNow, _ := s.Copyfiles(selectedProject, ss)
+	dateNow, fileDirPath, _, fileType, _ := s.copyfiles(selectedProject, ss)
 
-	fmt.Println(dateNow)
+	//fmt.Println(dateNow)
 	//fmt.Println(fileDirPath)
 	//fmt.Println(iNum)
+	//fmt.Println(fileType)
 	//复制jar文件
+	if fileType == "jar" {
+		fmt.Println("jar=========")
+		s.copyJars(selectedProject, dateNow, fileDirPath)
+	}
 
+	ZipDir(selectedProject.Out_path+PathSeparator+dateNow+PathSeparator+fileDirPath, selectedProject.Out_path+PathSeparator+dateNow+PathSeparator+fileDirPath+".zip")
 	//复制docx并替换
-	pathSeparator := string(os.PathSeparator)
-	r, err := docx.ReadDocxFile(RunningPath + pathSeparator + "resource" + pathSeparator + "template.docx")
+	r, err := docx.ReadDocxFile(RunningPath + PathSeparator + "resource" + PathSeparator + "template.docx")
 	if err != nil {
 		panic(err)
 	}
@@ -89,17 +95,24 @@ func (s *Stats) GetCom(projectname string, infos string, isbuild bool) {
 	docx1.Replace("logs", SubLogs, -1)
 	docx1.Replace("Zyy_xqbh", RequsNum, -1)
 	docx1.Replace("Zyy_subSvnPath", selectedProject.Sub_path+"/"+dateNow, -1)
-	docx1.WriteToFile(selectedProject.Out_path + pathSeparator + dateNow + pathSeparator + "更新说明文档-" + dateNow + ".docx")
+	docx1.WriteToFile(selectedProject.Out_path + PathSeparator + dateNow + PathSeparator + "更新说明文档-" + dateNow + ".docx")
 	r.Close()
 
 	logger.Info("fffff")
 
 }
-func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) (dateNow string, err error) {
+
+/**
+1 时间戳文件夹名称
+2 war或jar文件名
+3 文件数量
+4 文件类型
+5 错误
+*/
+func (s *ThisCopy) copyfiles(projectConf Confs, checkedInfos []SvnInfo) (string, string, int64, string, error) {
 	//获取项目路径
-	pathSeparator := string(os.PathSeparator)
 	baseUrl := projectConf.Dir_path
-	baseUrl = baseUrl + pathSeparator + "target"
+	baseUrl = baseUrl + PathSeparator + "target"
 	//fmt.Println(baseUrl)
 	var file os.FileInfo
 	var fileType string
@@ -129,18 +142,20 @@ func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) (dateNow st
 	}
 
 	fileDirPath := strings.ReplaceAll(file.Name(), "."+fileType, "")
-	dirExist, fileDir, _ := PathExists(baseUrl + pathSeparator + fileDirPath)
-	if !dirExist {
-		fmt.Println("文件夹不存在")
-		//return
+	if fileType == "war" {
+		dirExist, fileDir, _ := PathExists(baseUrl + PathSeparator + fileDirPath)
+		if !dirExist {
+			fmt.Println("文件夹不存在")
+			//return
+		}
+		if !fileDir.IsDir() {
+			fmt.Println("找到的不是文件夹")
+			//return
+		}
 	}
-	if !fileDir.IsDir() {
-		fmt.Println("找到的不是文件夹")
-		//return
-	}
-	dateNow = time.Now().Format("20060102150405")
+	dateNow := time.Now().Format("20060102150405")
 	for _, info := range checkedInfos {
-		stringTemp := strings.Split(info.Path, pathSeparator)
+		stringTemp := strings.Split(info.Path, PathSeparator)
 		var _fileurl string
 		var flag = true
 		var _web string
@@ -163,7 +178,7 @@ func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) (dateNow st
 				} else {
 				}
 			} else {
-				_fileurl += pathSeparator + s2
+				_fileurl += PathSeparator + s2
 			}
 		}
 		_exten := lastStr[k+1:]
@@ -173,28 +188,28 @@ func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) (dateNow st
 		}
 		//fmt.Println(_exten)
 		if fileType == "jar" {
-			_fileurl = strings.Replace(_fileurl, "src"+pathSeparator+"main"+pathSeparator+"java", "classes", -1)
-			_fileurl = strings.Replace(_fileurl, "src"+pathSeparator+"main"+pathSeparator+"resources", "classes", -1)
+			_fileurl = strings.Replace(_fileurl, "src"+PathSeparator+"main"+PathSeparator+"java", "classes", -1)
+			_fileurl = strings.Replace(_fileurl, "src"+PathSeparator+"main"+PathSeparator+"resources", "classes", -1)
 		} else {
-			_fileurl = strings.Replace(_fileurl, "src"+pathSeparator+"main"+pathSeparator+"java", "WEB-INF"+pathSeparator+"classes", -1)
-			_fileurl = strings.Replace(_fileurl, "src"+pathSeparator+"main"+pathSeparator+"resources", "WEB-INF"+pathSeparator+"classes", -1)
+			_fileurl = strings.Replace(_fileurl, "src"+PathSeparator+"main"+PathSeparator+"java", "WEB-INF"+PathSeparator+"classes", -1)
+			_fileurl = strings.Replace(_fileurl, "src"+PathSeparator+"main"+PathSeparator+"resources", "WEB-INF"+PathSeparator+"classes", -1)
 		}
 		if _web != "" {
-			_fileurl = strings.Replace(_fileurl, _web+pathSeparator, "", -1)
+			_fileurl = strings.Replace(_fileurl, _web+PathSeparator, "", -1)
 		}
 
-		uFrom := baseUrl + pathSeparator + fileDirPath + pathSeparator + _fileurl
+		uFrom := baseUrl + PathSeparator + fileDirPath + PathSeparator + _fileurl
 		if fileType == "jar" {
 			uFrom = baseUrl + "\\" + _fileurl
 		}
 		//fmt.Println(uFrom)
-		uTo := projectConf.Out_path + pathSeparator + dateNow + pathSeparator + fileDirPath + pathSeparator + _fileurl
+		uTo := projectConf.Out_path + PathSeparator + dateNow + PathSeparator + fileDirPath + PathSeparator + _fileurl
 		if fileType == "jar" {
-			uTo = projectConf.Out_path + pathSeparator + dateNow + pathSeparator + fileDirPath + pathSeparator + "BOOT-INF" + pathSeparator + _fileurl
+			uTo = projectConf.Out_path + PathSeparator + dateNow + PathSeparator + fileDirPath + PathSeparator + "BOOT-INF" + PathSeparator + _fileurl
 		}
 		os.MkdirAll(strings.Replace(uTo, lastStr, "", -1), 0777)
 		//fmt.Println(uTo)
-		pFrom := strings.Replace(uFrom, pathSeparator+lastStr, "", -1)
+		pFrom := strings.Replace(uFrom, PathSeparator+lastStr, "", -1)
 		//fmt.Println(pFrom)
 		_, err := os.Stat(pFrom)
 		if err == nil {
@@ -204,9 +219,9 @@ func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) (dateNow st
 				for _, fileInfo := range filesTemp {
 					if strings.HasPrefix(fileInfo.Name(), fileNameTemp) && strings.HasSuffix(fileInfo.Name(), "."+_exten) {
 						//fmt.Println("mmm:" + fileInfo.Name())
-						//fmt.Println("copy to : " + strings.Replace(uTo, pathSeparator+lastStr, "", -1) + pathSeparator + fileInfo.Name())
-						//fmt.Println("copy ffrom : ", pFrom+pathSeparator+fileInfo.Name())
-						CopyFile(strings.Replace(uTo, pathSeparator+lastStr, "", -1)+pathSeparator+fileInfo.Name(), pFrom+pathSeparator+fileInfo.Name())
+						//fmt.Println("copy to : " + strings.Replace(uTo, PathSeparator+lastStr, "", -1) + PathSeparator + fileInfo.Name())
+						//fmt.Println("copy ffrom : ", pFrom+PathSeparator+fileInfo.Name())
+						CopyFile(strings.Replace(uTo, PathSeparator+lastStr, "", -1)+PathSeparator+fileInfo.Name(), pFrom+PathSeparator+fileInfo.Name())
 						iNum = iNum + 1
 					}
 				}
@@ -216,10 +231,10 @@ func (s *Stats) Copyfiles(projectConf Confs, checkedInfos []SvnInfo) (dateNow st
 			}
 		}
 	}
-	return dateNow, nil
+	return dateNow, fileDirPath, iNum, fileType, nil
 }
 
-func (s *Stats) CmdAndChangeDirToShow(dir string, commandName string, params []string) error {
+func (s *ThisCopy) CmdAndChangeDirToShow(dir string, commandName string, params []string) error {
 	//cmd := exec.Command("cmd.exe", "/c", "cd D:\\1-WorkSpace\\0_SvnProject\\bdcdj && d: && dir")
 	ePath, _ := os.Executable()
 	fmt.Println(ePath)
@@ -261,6 +276,28 @@ func (s *Stats) CmdAndChangeDirToShow(dir string, commandName string, params []s
 	return err
 }
 
+func (s *ThisCopy) copyJars(projectConf Confs, dateNow string, fileDirPath string) {
+	uTo := projectConf.Out_path + PathSeparator + dateNow + PathSeparator + fileDirPath + PathSeparator + "BOOT-INF" + PathSeparator + "lib"
+	//创建lib文件夹
+	exist, dir, _ := PathExists(uTo)
+	if exist && dir.IsDir() {
+		os.MkdirAll(uTo, 0777)
+	}
+	libDir := projectConf.Dir_path + PathSeparator + "target" + PathSeparator + "lib"
+	filesTemp, _ := ioutil.ReadDir(libDir)
+	jars := MyConfig.Jarnames
+	for _, jar := range jars {
+		fmt.Println(jar)
+		for _, fileInfo := range filesTemp {
+			if strings.HasPrefix(fileInfo.Name(), jar) {
+				CopyFile(uTo+PathSeparator+fileInfo.Name(), libDir+PathSeparator+fileInfo.Name())
+				//iNum = iNum + 1
+			}
+		}
+
+	}
+}
+
 func PathExists(path string) (bool, os.FileInfo, error) {
 	file, err := os.Stat(path)
 	if err == nil {
@@ -283,4 +320,45 @@ func CopyFile(dstName, srcName string) (written int64, err error) {
 	}
 	defer dst.Close()
 	return io.Copy(dst, src)
+}
+
+func ZipDir(srcFile string, destZip string) error {
+	zipfile, err := os.Create(destZip)
+	if err != nil {
+		return err
+	}
+	defer zipfile.Close()
+	archive := zip.NewWriter(zipfile)
+	defer archive.Close()
+	filepath.Walk(srcFile, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return err
+		}
+		header.Name = strings.TrimPrefix(path, filepath.Dir(srcFile)+"/")
+		// header.Name = path
+		if info.IsDir() {
+			header.Name += "/"
+		} else {
+			header.Method = zip.Deflate
+		}
+		writer, err := archive.CreateHeader(header)
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			file, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+			_, err = io.Copy(writer, file)
+		}
+		return err
+	})
+
+	return err
 }

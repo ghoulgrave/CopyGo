@@ -81,7 +81,7 @@
                 </el-table>
                 <el-button @click="datas()">打包更新文件</el-button>
                 <el-button @click="">打包更新文件（包含jar包）</el-button>
-                <el-button @click="">整包获取</el-button>
+<!--                <el-button @click="">整包获取</el-button>-->
                 <el-drawer
                         title="编译情况"
                         :visible.sync="drawer"
@@ -223,21 +223,21 @@
             //绑定事件可以使用了
             window.wails.Events.On('cpu_usage', cpu_usage => {
                 if (cpu_usage) {
-                    //console.log("sss"+cpu_usage.avg);
-                    this.message = this.message + "\n" + cpu_usage.avg;
+                    //console.log("sss"+cpu_usage.str);
+                    this.message = this.message + "\n" + cpu_usage.str;
                 }
             });
             //绑定事件可以使用了
             window.wails.Events.On('builds_pl', s => {
                 if (s) {
-                    //console.log("sss"+cpu_usage.avg);
-                    this.message_pl = this.message_pl + "\n" + s.avg;
+                    //console.log("sss"+cpu_usage.str);
+                    this.message_pl = this.message_pl + "\n" + s.str;
                 }
             });
         },
         methods: {
             sysOnSubmit(){
-                window.backend.Stats.UpSysConfig(this.sysform.cname,this.sysform.ename).then(result => {
+                window.backend.ThisCopy.UpSysConfig(this.sysform.cname,this.sysform.ename).then(result => {
                     if(result == '操作成功'){
                         this.showMessages('操作成功！'+'请重启。', 'info')
                     }else {
@@ -247,7 +247,7 @@
             },
             //获取项目列表
             projectName() {
-                window.backend.Stats.GetProjectName().then(result => {
+                window.backend.ThisCopy.GetProjectName().then(result => {
                     this.options = eval(result);
                     this.formInline.project = this.options[0].value;
                     this.checkboxs = this.options;
@@ -255,20 +255,21 @@
             },
             //获取查询姓名信息
             getEName(){
-                window.backend.Stats.GetEName().then(result => {
+                window.backend.ThisCopy.GetEName().then(result => {
                     this.sysform.ename = result;
+                    this.formInline.czr = result
                 });
             },
             //获取中文姓名信息
             getCName() {
-                window.backend.Stats.GetCName().then(result => {
+                window.backend.ThisCopy.GetCName().then(result => {
                     this.sysform.cname = result;
                 });
             },
             //提交查询信息填写列表数据
             onSubmit() {
                 this.loading = true;
-                window.backend.Stats.GetSubmitedLogInfo(this.formInline.project, this.formInline.kssj, this.formInline.jssj, this.formInline.czr).then(result => {
+                window.backend.ThisCopy.GetSubmitedLogInfo(this.formInline.project, this.formInline.kssj, this.formInline.jssj, this.formInline.czr).then(result => {
                     var arry = eval(result);
                     this.tableData = [];
                     this.tableData = arry;
@@ -297,7 +298,7 @@
                     this.checks.forEach(s =>{
                         k+=s+"^";
                     })
-                    window.backend.Stats.GetAllProject(k).then()
+                    window.backend.ThisCopy.GetAllProject(k).then()
                 }else{
                     this.showMessages("没有选中打包项目。", 'warning')
                 }
@@ -320,7 +321,7 @@
                         })
                         strs += "]";
                         //调用后台方法
-                        window.backend.Stats.GetCom(this.formInline.project, strs, true).then()
+                        window.backend.ThisCopy.GetCom(this.formInline.project, strs, true).then()
                         // .catch(error => {
                         //     //console.log(error.message);
                         // });
@@ -334,7 +335,7 @@
                         })
                         strs += "]";
                         //调用后台方法
-                        window.backend.Stats.GetCom(this.formInline.project, strs, false).then()
+                        window.backend.ThisCopy.GetCom(this.formInline.project, strs, false).then()
                         // .catch(error => {
                         //     //console.log(error.message);
                         // });
