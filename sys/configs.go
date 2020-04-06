@@ -64,6 +64,11 @@ func (s *ThisCopy) GetPlOuPath() string {
 	return MyConfig.PlOutPath
 }
 
+//获取所有项目配置信息
+func (s *ThisCopy) GetProjectConfs() []Confs {
+	return MyConfig.Conf
+}
+
 //jar文件名
 func (s *ThisCopy) GetJarNames() []string {
 	return MyConfig.Jarnames

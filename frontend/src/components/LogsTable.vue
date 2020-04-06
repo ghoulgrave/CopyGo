@@ -43,6 +43,9 @@
                     <el-form-item>
                         <el-button type="primary" @click="onSubmit">查询</el-button>
                     </el-form-item>
+                    <el-form-item>
+                        <el-button type="primary" @click="datas()">打包更新文件</el-button>
+                    </el-form-item>
                 </el-form>
                 <!-- <el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button> -->
 
@@ -79,7 +82,7 @@
                             show-overflow-tooltip>
                     </el-table-column>
                 </el-table>
-                <el-button @click="datas()">打包更新文件</el-button>
+
                 <!--                <el-button @click="">打包更新文件（包含jar包）</el-button>-->
                 <!--                <el-button @click="">整包获取</el-button>-->
                 <el-drawer
@@ -114,14 +117,16 @@
                                 inactive-text="不编译">
                         </el-switch>
                     </el-form-item>
-                    <el-form-item label="项目选择">
-                        <el-checkbox-group v-model="checks" class="checkGroup">
+                    <el-form-item label="项目选择" >
+                        <el-checkbox-group v-model="checks" class="checkGroup" size="900">
                             <el-checkbox v-for="(item) in checkboxs" :label="item.value" :key="item.value"
-                                         @change="handleCheckedChange">{{item.value}}
+                                         @change="handleCheckedChange" border>{{item.value}}
                             </el-checkbox>
                         </el-checkbox-group>
                     </el-form-item>
-                    <el-button @click="Alldatas()">批量打包文件</el-button>
+                    <el-form-item >
+                        <el-button type="primary" @click="Alldatas()">批量打包文件</el-button>
+                    </el-form-item>
                 </el-form>
                 <el-drawer
                         title="批量编译情况"
@@ -138,7 +143,34 @@
             </div>
             <div v-if="tab3_1" style="margin-top: 2px">
                 <p style="white-space: pre-line;color: #303133;text-align: left;">项目信息</p>
+                <el-carousel type="card" height="700px">
+<!--                    -->
+                        <el-carousel-item :interval="4000000"  v-for="(item,i) in projectConfs" :key="i">
 
+                            <el-form ref="form" label-width="80px">
+                            <el-form-item label="项目名称">
+                                    <el-input type="text" v-model="projectConfs[i].proname"></el-input>
+                            </el-form-item>
+                            </el-form>
+    <!--                            <el-form-item label="svn地址">-->
+    <!--                                <el-input value=''>"{{item.Svn_path}}"</el-input>-->
+    <!--                            </el-form-item>-->
+    <!--                            <el-form-item label="更新提交地址">-->
+    <!--                                <el-input value="{{ item.Name }}"></el-input>-->
+    <!--                            </el-form-item>-->
+    <!--                            <el-form-item label="更新输出地址">-->
+    <!--                                <el-input value="{{ item.Out_path }}"></el-input>-->
+    <!--                            </el-form-item>-->
+    <!--                            <el-form-item label="工程物理文件夹" >-->
+    <!--                                <el-input value="{{ item.Dir_path }}"></el-input>-->
+    <!--                            </el-form-item>-->
+    <!--                            <el-form-item >-->
+    <!--                                <el-button type="primary" @click="">保存</el-button>-->
+    <!--                            </el-form-item>-->
+
+                        </el-carousel-item>
+<!--                    -->
+                </el-carousel>
 
             </div>
             <div v-if="tab3_2" style="margin-top: 2px">
@@ -207,6 +239,7 @@
                     plOuPath:'',
                     textarea: ''
                 },
+                projectForm:{},
                 checkboxs: [],
                 checks: [],
                 tab1: true,
@@ -239,10 +272,15 @@
                 buildOrNot: true,
                 options: [],
                 tableData: [],
-                multipleSelection: []
+                multipleSelection: [],
+                projectConfs:[]
             }
         },
+        beforeCreate(){
+
+        },
         created() {
+            this.project()
             this.projectName()
             this.getEName()
             this.getCName()
@@ -284,6 +322,18 @@
                     this.options = eval(result);
                     this.formInline.project = this.options[0].value;
                     this.checkboxs = this.options;
+                });
+
+            },
+            project(){
+                window.backend.ThisCopy.GetProjectConfs().then(result => {
+                    if(result){
+                        var _array = eval(result);
+                        _array.forEach((s,i) =>{
+                            var item = {proname: s.Name};
+                            this.projectConfs.push(item);
+                        })
+                    }
                 });
             },
             //获取查询姓名信息
@@ -514,3 +564,20 @@
     }
 
 </script>
+<style>
+    .el-carousel__item h3 {
+        color: #475669;
+        font-size: 14px;
+        opacity: 0.75;
+        line-height: 200px;
+        margin: 0;
+    }
+
+    .el-carousel__item:nth-child(2n) {
+        background-color: #99a9bf;
+    }
+
+    .el-carousel__item:nth-child(2n+1) {
+        background-color: #d3dce6;
+    }
+</style>
