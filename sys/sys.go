@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"bufio"
 	"copy/docx"
-	"copy/logger"
 	"encoding/json"
 	"fmt"
 	"github.com/wailsapp/wails"
@@ -44,6 +43,7 @@ func (s *ThisCopy) GetOuts(k string) *TimesStruct {
 	}
 }
 func (s *ThisCopy) GetCom(projectname string, infos string, isbuild bool) {
+	s.runtime.Events.Emit("cpu_usage", s.GetOuts("[COPY-INFO] Beginning ."))
 	var selectedProject Confs
 	for _, conf := range ProjectConfs {
 		if conf.Name == projectname {
@@ -53,7 +53,7 @@ func (s *ThisCopy) GetCom(projectname string, infos string, isbuild bool) {
 	}
 	if selectedProject.Dir_path != "" {
 		if isbuild {
-			s.CmdAndChangeDirToShow(selectedProject.Dir_path, "", nil)
+			s.CmdAndChangeDirToShow(selectedProject.Dir_path, false)
 		}
 	} else {
 		s.log.Info("[COPY-INFO] 项目：【" + projectname + "】 文件夹地址没有配置")
@@ -71,7 +71,8 @@ func (s *ThisCopy) GetCom(projectname string, infos string, isbuild bool) {
 	//json.Unmarshal([]byte(k), &ss)
 	////fmt.Println("xxxxxx")
 	////fmt.Println(len(ss))
-	dateNow, fileDirPath, _, fileType, _ := s.copyfiles(selectedProject, ss)
+	dateNow := time.Now().Format("20060102150405")
+	_, fileDirPath, _, fileType, _ := s.copyfiles(selectedProject, ss, dateNow)
 
 	//fmt.Println(dateNow)
 	//fmt.Println(fileDirPath)
@@ -79,7 +80,6 @@ func (s *ThisCopy) GetCom(projectname string, infos string, isbuild bool) {
 	//fmt.Println(fileType)
 	//复制jar文件
 	if fileType == "jar" {
-		fmt.Println("jar=========")
 		s.copyJars(selectedProject, dateNow, fileDirPath)
 	}
 
@@ -98,7 +98,8 @@ func (s *ThisCopy) GetCom(projectname string, infos string, isbuild bool) {
 	docx1.WriteToFile(selectedProject.Out_path + PathSeparator + dateNow + PathSeparator + "更新说明文档-" + dateNow + ".docx")
 	r.Close()
 
-	logger.Info("fffff")
+	s.runtime.Events.Emit("cpu_usage", s.GetOuts("[COPY-INFO] All Done ."))
+	s.runtime.Events.Emit("cpu_usage", s.GetOuts("[COPY-INFO] file folder : "+selectedProject.Out_path+PathSeparator+dateNow))
 
 }
 
@@ -109,11 +110,12 @@ func (s *ThisCopy) GetCom(projectname string, infos string, isbuild bool) {
 4 文件类型
 5 错误
 */
-func (s *ThisCopy) copyfiles(projectConf Confs, checkedInfos []SvnInfo) (string, string, int64, string, error) {
+//通过获取日志将文件拷贝到对应位置
+func (s *ThisCopy) copyfiles(projectConf Confs, checkedInfos []SvnInfo, dateNow string) (string, string, int64, string, error) {
 	//获取项目路径
 	baseUrl := projectConf.Dir_path
 	baseUrl = baseUrl + PathSeparator + "target"
-	//fmt.Println(baseUrl)
+	fmt.Println(baseUrl)
 	var file os.FileInfo
 	var fileType string
 	var iNum = int64(0)
@@ -153,7 +155,7 @@ func (s *ThisCopy) copyfiles(projectConf Confs, checkedInfos []SvnInfo) (string,
 			//return
 		}
 	}
-	dateNow := time.Now().Format("20060102150405")
+
 	for _, info := range checkedInfos {
 		stringTemp := strings.Split(info.Path, PathSeparator)
 		var _fileurl string
@@ -187,9 +189,14 @@ func (s *ThisCopy) copyfiles(projectConf Confs, checkedInfos []SvnInfo) (string,
 			_exten = "class"
 		}
 		//fmt.Println(_exten)
+		var jar_web = false
 		if fileType == "jar" {
 			_fileurl = strings.Replace(_fileurl, "src"+PathSeparator+"main"+PathSeparator+"java", "classes", -1)
 			_fileurl = strings.Replace(_fileurl, "src"+PathSeparator+"main"+PathSeparator+"resources", "classes", -1)
+			if strings.Contains(_fileurl, "src"+PathSeparator+"main"+PathSeparator+"webapp") {
+				_fileurl = strings.Replace(_fileurl, "src"+PathSeparator+"main"+PathSeparator+"webapp", "webapp", -1)
+				jar_web = true
+			}
 		} else {
 			_fileurl = strings.Replace(_fileurl, "src"+PathSeparator+"main"+PathSeparator+"java", "WEB-INF"+PathSeparator+"classes", -1)
 			_fileurl = strings.Replace(_fileurl, "src"+PathSeparator+"main"+PathSeparator+"resources", "WEB-INF"+PathSeparator+"classes", -1)
@@ -200,12 +207,17 @@ func (s *ThisCopy) copyfiles(projectConf Confs, checkedInfos []SvnInfo) (string,
 
 		uFrom := baseUrl + PathSeparator + fileDirPath + PathSeparator + _fileurl
 		if fileType == "jar" {
-			uFrom = baseUrl + "\\" + _fileurl
+			uFrom = baseUrl + PathSeparator + _fileurl
 		}
 		//fmt.Println(uFrom)
 		uTo := projectConf.Out_path + PathSeparator + dateNow + PathSeparator + fileDirPath + PathSeparator + _fileurl
 		if fileType == "jar" {
-			uTo = projectConf.Out_path + PathSeparator + dateNow + PathSeparator + fileDirPath + PathSeparator + "BOOT-INF" + PathSeparator + _fileurl
+			if jar_web {
+				_fileurl = strings.Replace(_fileurl, "webapp"+PathSeparator, "", -1)
+				uTo = projectConf.Out_path + PathSeparator + dateNow + PathSeparator + fileDirPath + PathSeparator + "META-INF" + PathSeparator + "resources" + PathSeparator + _fileurl
+			} else {
+				uTo = projectConf.Out_path + PathSeparator + dateNow + PathSeparator + fileDirPath + PathSeparator + "BOOT-INF" + PathSeparator + _fileurl
+			}
 		}
 		os.MkdirAll(strings.Replace(uTo, lastStr, "", -1), 0777)
 		//fmt.Println(uTo)
@@ -234,7 +246,8 @@ func (s *ThisCopy) copyfiles(projectConf Confs, checkedInfos []SvnInfo) (string,
 	return dateNow, fileDirPath, iNum, fileType, nil
 }
 
-func (s *ThisCopy) CmdAndChangeDirToShow(dir string, commandName string, params []string) error {
+//编译并将信息输出到runtime参数中
+func (s *ThisCopy) CmdAndChangeDirToShow(dir string, ispl bool) error {
 	//cmd := exec.Command("cmd.exe", "/c", "cd D:\\1-WorkSpace\\0_SvnProject\\bdcdj && d: && dir")
 	ePath, _ := os.Executable()
 	fmt.Println(ePath)
@@ -267,37 +280,41 @@ func (s *ThisCopy) CmdAndChangeDirToShow(dir string, commandName string, params 
 
 		if line != "" {
 			fmt.Println(line)
-			s.runtime.Events.Emit("cpu_usage", s.GetOuts(strings.Replace(line, "\n", "", -1)))
+			if ispl {
+				s.runtime.Events.Emit("builds_pl", s.GetOuts(strings.Replace(line, "\n", "", -1)))
+			} else {
+				s.runtime.Events.Emit("cpu_usage", s.GetOuts(strings.Replace(line, "\n", "", -1)))
+			}
+
 		}
 
 	}
 	err = cmd.Wait()
-	s.runtime.Events.Emit("cpu_usage", s.GetOuts("[COPY-INFO] All Done ."))
+
 	return err
 }
 
+//复制jar包
 func (s *ThisCopy) copyJars(projectConf Confs, dateNow string, fileDirPath string) {
 	uTo := projectConf.Out_path + PathSeparator + dateNow + PathSeparator + fileDirPath + PathSeparator + "BOOT-INF" + PathSeparator + "lib"
 	//创建lib文件夹
-	exist, dir, _ := PathExists(uTo)
-	if exist && dir.IsDir() {
+	exist, _, _ := PathExists(uTo)
+	if !exist {
 		os.MkdirAll(uTo, 0777)
 	}
 	libDir := projectConf.Dir_path + PathSeparator + "target" + PathSeparator + "lib"
 	filesTemp, _ := ioutil.ReadDir(libDir)
 	jars := MyConfig.Jarnames
 	for _, jar := range jars {
-		fmt.Println(jar)
 		for _, fileInfo := range filesTemp {
 			if strings.HasPrefix(fileInfo.Name(), jar) {
 				CopyFile(uTo+PathSeparator+fileInfo.Name(), libDir+PathSeparator+fileInfo.Name())
-				//iNum = iNum + 1
 			}
 		}
-
 	}
 }
 
+//判断文件夹（文件）是否存在
 func PathExists(path string) (bool, os.FileInfo, error) {
 	file, err := os.Stat(path)
 	if err == nil {
@@ -308,6 +325,8 @@ func PathExists(path string) (bool, os.FileInfo, error) {
 	}
 	return false, nil, err
 }
+
+//单纯复制文件
 func CopyFile(dstName, srcName string) (written int64, err error) {
 	src, err := os.Open(srcName)
 	if err != nil {
@@ -322,6 +341,7 @@ func CopyFile(dstName, srcName string) (written int64, err error) {
 	return io.Copy(dst, src)
 }
 
+//压缩文件夹
 func ZipDir(srcFile string, destZip string) error {
 	zipfile, err := os.Create(destZip)
 	if err != nil {

@@ -12,7 +12,7 @@ type SvnInfo struct {
 //项目与选择的日志关系
 type ProCheckedSvn struct {
 	Svns    []SvnInfo `json:"svn"`
-	ProName string    `json:"proname"`
+	Project Confs     `json:"project"`
 }
 
 type MyData struct {
@@ -36,6 +36,7 @@ type Search struct {
 type Config struct {
 	Username   string
 	Searchname string
+	PlOutPath  string
 	Jarnames   []string
 	Conf       []Confs
 }

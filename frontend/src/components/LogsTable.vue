@@ -80,8 +80,8 @@
                     </el-table-column>
                 </el-table>
                 <el-button @click="datas()">打包更新文件</el-button>
-                <el-button @click="">打包更新文件（包含jar包）</el-button>
-<!--                <el-button @click="">整包获取</el-button>-->
+                <!--                <el-button @click="">打包更新文件（包含jar包）</el-button>-->
+                <!--                <el-button @click="">整包获取</el-button>-->
                 <el-drawer
                         title="编译情况"
                         :visible.sync="drawer"
@@ -97,16 +97,32 @@
             </div>
             <div v-if="tab2" style="margin-top: 2px">
                 <p style="white-space: pre-line;color: #303133;text-align: left;">批量处理</p>
-
-
-
-                 <el-checkbox-group v-model="checks" class="checkGroup" >
-                 <el-checkbox v-for="(item) in checkboxs" :label="item.value" :key="item.value" @change="handleCheckedChange">{{item.value}}</el-checkbox>
-                 </el-checkbox-group>
-
-
-                <el-button @click="Alldatas()">批量打包文件</el-button>
-
+                <el-form ref="form" label-width="80px">
+                    <el-form-item label="开始时间">
+                        <el-input v-model="kssj_pl" placeholder="开始时间"></el-input>
+                    </el-form-item>
+                    <el-form-item label="结束时间">
+                        <el-input v-model="jssj_pl" placeholder="结束时间"></el-input>
+                    </el-form-item>
+                    <el-form-item label="操作人">
+                        <el-input v-model="czr_pl" placeholder="操作人"></el-input>
+                    </el-form-item>
+                    <el-form-item label="是否编译">
+                        <el-switch
+                                v-model="buildOrNot"
+                                active-text="编译"
+                                inactive-text="不编译">
+                        </el-switch>
+                    </el-form-item>
+                    <el-form-item label="项目选择">
+                        <el-checkbox-group v-model="checks" class="checkGroup">
+                            <el-checkbox v-for="(item) in checkboxs" :label="item.value" :key="item.value"
+                                         @change="handleCheckedChange">{{item.value}}
+                            </el-checkbox>
+                        </el-checkbox-group>
+                    </el-form-item>
+                    <el-button @click="Alldatas()">批量打包文件</el-button>
+                </el-form>
                 <el-drawer
                         title="批量编译情况"
                         :visible.sync="drawer_pl"
@@ -127,16 +143,26 @@
             </div>
             <div v-if="tab3_2" style="margin-top: 2px">
                 <p style="white-space: pre-line;color: #303133;text-align: left;">系统信息</p>
-                <el-form ref="form" :model="sysform" label-width="80px" >
+                <el-form ref="form" :model="sysform" label-width="180px">
                     <el-form-item label="用户名称中文">
                         <el-input v-model="sysform.cname"></el-input>
                     </el-form-item>
                     <el-form-item label="用户名称英文">
                         <el-input v-model="sysform.ename"></el-input>
                     </el-form-item>
+                    <el-form-item label="批量输出文件夹位置">
+                        <el-input v-model="sysform.plOuPath"></el-input>
+                    </el-form-item>
+                    <el-form-item label="jar包通用名称">
+                        <el-input
+                                type="textarea"
+                                :rows="10"
+                                placeholder="jar包名称，去掉版本号部分。"
+                                v-model="sysform.textarea">
+                        </el-input>
+                    </el-form-item>
                     <el-button type="primary" @click="sysOnSubmit">保存信息</el-button>
                 </el-form>
-
 
 
             </div>
@@ -145,14 +171,13 @@
                     <el-scrollbar style="height: 100%;">
                         <p style="white-space: pre-line;color: #303133;text-align: left;">帮助中心</p>
                         <p style="white-space: pre-line;color: #303133;text-align: left;">
-                            1.
+                            1.批量输出地址没有配置，则使用找到的第一个项目输出地址
                             2.
 
 
                         </p>
                         <p style="white-space: pre-line;color: #303133;text-align: left;">已知问题</p>
                         <p style="white-space: pre-line;color: #303133;text-align: left;">
-                            * jar包打包没实现
                             * 日志记录问题没有实现
                             * 整包没有实现
                             * 项目信息设置
@@ -176,12 +201,14 @@
     export default {
         data() {
             return {
-                sysform:{
+                sysform: {
                     cname: '',
                     ename: '',
+                    plOuPath:'',
+                    textarea: ''
                 },
-                checkboxs:[],
-                checks:[],
+                checkboxs: [],
+                checks: [],
                 tab1: true,
                 tab2: false,
                 tab3_1: false,
@@ -197,15 +224,19 @@
                 direction: 'btt',//从下往上开
                 message_pl: '',
                 drawer_pl: false,
-                direction_pl:'ttb',
+                direction_pl: 'ttb',
                 loading: false,
                 formInline: {
                     user: '',
                     project: '',
-                    kssj: this.formartDate("day", "first"),
-                    jssj: this.formartDate("day", "end"),
+                    kssj: this.formartDate("min", "first"),
+                    jssj: this.formartDate("min", "end"),
                     czr: ''
                 },
+                kssj_pl: this.formartDate("day", "first"),
+                jssj_pl: this.formartDate("day", "end"),
+                czr_pl: '',
+                buildOrNot: true,
                 options: [],
                 tableData: [],
                 multipleSelection: []
@@ -215,6 +246,8 @@
             this.projectName()
             this.getEName()
             this.getCName()
+            this.getPlOuPath()
+            this.getJarNames()
         },
         updated: function () {
             this.scrollDown()
@@ -236,11 +269,11 @@
             });
         },
         methods: {
-            sysOnSubmit(){
-                window.backend.ThisCopy.UpSysConfig(this.sysform.cname,this.sysform.ename).then(result => {
-                    if(result == '操作成功'){
-                        this.showMessages('操作成功！'+'请重启。', 'info')
-                    }else {
+            sysOnSubmit() {
+                window.backend.ThisCopy.UpSysConfig(this.sysform.cname, this.sysform.ename,this.sysform.plOuPath,this.sysform.textarea).then(result => {
+                    if (result == '操作成功') {
+                        this.showMessages('操作成功！' + '请重启。', 'info')
+                    } else {
                         this.showMessages("操作失败了，请重新操作", 'warning')
                     }
                 });
@@ -254,16 +287,33 @@
                 });
             },
             //获取查询姓名信息
-            getEName(){
+            getEName() {
                 window.backend.ThisCopy.GetEName().then(result => {
                     this.sysform.ename = result;
-                    this.formInline.czr = result
+                    this.formInline.czr = result;
+                    this.czr_pl = result;
                 });
             },
             //获取中文姓名信息
             getCName() {
                 window.backend.ThisCopy.GetCName().then(result => {
                     this.sysform.cname = result;
+                });
+            },
+            //获取批量导出文件夹
+            getPlOuPath() {
+                window.backend.ThisCopy.GetPlOuPath().then(result => {
+                    this.sysform.plOuPath = result;
+                });
+            },
+            //jar包名称
+            getJarNames() {
+                window.backend.ThisCopy.GetJarNames().then(result => {
+                    if(result && result.length >0){
+                        result.forEach(k =>{
+                            this.sysform.textarea += k+"\n"
+                        })
+                    }
                 });
             },
             //提交查询信息填写列表数据
@@ -291,15 +341,15 @@
             handleSelectionChange(val) {
                 this.multipleSelection = val;
             },
-            Alldatas:function(){
+            Alldatas: function () {
                 this.drawer_pl = true
-                if(this.checks.length > 0){
-                    var k =""
-                    this.checks.forEach(s =>{
-                        k+=s+"^";
+                if (this.checks.length > 0) {
+                    var k = ""
+                    this.checks.forEach(s => {
+                        k += s + "^";
                     })
-                    window.backend.ThisCopy.GetAllProject(k).then()
-                }else{
+                    window.backend.ThisCopy.GetAllProject(k, this.kssj_pl, this.jssj_pl, this.czr_pl, this.buildOrNot).then()
+                } else {
                     this.showMessages("没有选中打包项目。", 'warning')
                 }
             },
@@ -426,10 +476,10 @@
                 var time = new Date();
                 if (type != "day") {
                     if (order == "first") {
-                        time = new Date(time - 10 * 60 * 1000);
+                        time = new Date(time.getTime() - 10 * 60 * 1000);
                     }
                     if (order == "end") {
-                        time = new Date(time + 10 * 60 * 1000);
+                        time = new Date(time.getTime() + 10 * 60 * 1000);
                     }
                 }
                 var y = time.getFullYear();

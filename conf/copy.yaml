@@ -9,12 +9,25 @@ conf:
   out_path: /Users/ghoul/3-updates/不动产登记数据维护子系统(hdm)
   sub_path: http://svn.gtmap.cn/svn/bs/release/不动产登记/不动产登记数据维护子系统(hdm)
   svn_path: http://192.168.0.35/svn/bs/estateplat/trunk/estateplat-hdm
-- dir_path: /Users/ghoul/1-svnWork/3.0/init
-  name: 3.0-init
+- dir_path: /Users/ghoul/1-svnWork/3.0/accept-ui
+  name: 3.0-accept-ui
   out_path: /Users/ghoul/3-updates/不动产登记数据维护子系统(hdm)
   sub_path: http://svn.gtmap.cn/svn/bs/release/不动产登记/业务管理系统（server）/东北标准版2016/2020年bdcdj2016版本更新
-  svn_path: http://192.168.0.35/svn/bs/realestate/trunk/init
-searchname: zzz
-username: 张一洋
+  svn_path: http://192.168.0.35/svn/bs/realestate/trunk/accept-ui
+- dir_path: /Users/ghoul/1-svnWork/3.0/accept
+  name: 3.0-accept
+  out_path: /Users/ghoul/3-updates/不动产登记数据维护子系统(hdm)
+  sub_path: http://svn.gtmap.cn/svn/bs/release/不动产登记/业务管理系统（server）/东北标准版2016/2020年bdcdj2016版本更新
+  svn_path: http://192.168.0.35/svn/bs/realestate/trunk/accept
+- dir_path: /Users/ghoul/1-svnWork/3.0/check
+  name: 3.0-check
+  out_path: /Users/ghoul/3-updates/不动产登记数据维护子系统(hdm)
+  sub_path: http://svn.gtmap.cn/svn/bs/release/不动产登记/业务管理系统（server）/东北标准版2016/2020年bdcdj2016版本更新
+  svn_path: http://192.168.0.35/svn/bs/realestate/trunk/check
 jarnames:
-  - common-
+- 111ssss
+- common-
+- "3333333"
+ploutpath: "11"
+searchname: "33"
+username: 张一洋
