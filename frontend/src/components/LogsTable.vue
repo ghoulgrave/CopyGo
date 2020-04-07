@@ -4,19 +4,20 @@
         <el-header>
             <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
                 <el-menu-item index="1">单个项目处理</el-menu-item>
-                <el-menu-item index="2">批量项目处理</el-menu-item>
-                <el-submenu index="3">
-                    <template slot="title">配置信息</template>
-                    <el-menu-item index="3-1">项目配置</el-menu-item>
-                    <el-menu-item index="3-2">系统配置</el-menu-item>
-                    <!--                    <el-menu-item index="3-3">选项3</el-menu-item>-->
-                    <!--                    <el-submenu index="3-4">-->
-                    <!--                        <template slot="title">选项4</template>-->
-                    <!--                        <el-menu-item index="3-4-1">选项1</el-menu-item>-->
-                    <!--                        <el-menu-item index="3-4-2">选项2</el-menu-item>-->
-                    <!--                        <el-menu-item index="3-4-3">选项3</el-menu-item>-->
-                    <!--                    </el-submenu>-->
-                </el-submenu>
+                <el-menu-item index="10">批量项目处理</el-menu-item>
+                <el-menu-item index="3-1">项目配置</el-menu-item>
+                <el-menu-item index="3-2">系统配置</el-menu-item>
+                <!--                <el-submenu index="3">-->
+                <!--                    <el-menu-item index="3-1">项目配置</el-menu-item>-->
+                <!--                    <el-menu-item index="3-2">系统配置</el-menu-item>-->
+                <!--                    <el-menu-item index="3-3">选项3</el-menu-item>-->
+                <!--                    <el-submenu index="3-4">-->
+                <!--                        <template slot="title">选项4</template>-->
+                <!--                        <el-menu-item index="3-4-1">选项1</el-menu-item>-->
+                <!--                        <el-menu-item index="3-4-2">选项2</el-menu-item>-->
+                <!--                        <el-menu-item index="3-4-3">选项3</el-menu-item>-->
+                <!--                    </el-submenu>-->
+                <!--                </el-submenu>-->
                 <el-menu-item index="4">帮助中心</el-menu-item>
                 <el-menu-item index="5">联系反馈</el-menu-item>
             </el-menu>
@@ -98,7 +99,7 @@
                     </div>
                 </el-drawer>
             </div>
-            <div v-if="tab2" style="margin-top: 2px">
+            <div v-if="tab10" style="margin-top: 2px">
                 <p style="white-space: pre-line;color: #303133;text-align: left;">批量处理</p>
                 <el-form ref="form" label-width="80px">
                     <el-form-item label="开始时间">
@@ -117,14 +118,14 @@
                                 inactive-text="不编译">
                         </el-switch>
                     </el-form-item>
-                    <el-form-item label="项目选择" >
+                    <el-form-item label="项目选择">
                         <el-checkbox-group v-model="checks" class="checkGroup" size="900">
                             <el-checkbox v-for="(item) in checkboxs" :label="item.value" :key="item.value"
                                          @change="handleCheckedChange" border>{{item.value}}
                             </el-checkbox>
                         </el-checkbox-group>
                     </el-form-item>
-                    <el-form-item >
+                    <el-form-item>
                         <el-button type="primary" @click="Alldatas()">批量打包文件</el-button>
                     </el-form-item>
                 </el-form>
@@ -143,33 +144,35 @@
             </div>
             <div v-if="tab3_1" style="margin-top: 2px">
                 <p style="white-space: pre-line;color: #303133;text-align: left;">项目信息</p>
-                <el-carousel type="card" height="700px">
-<!--                    -->
-                        <el-carousel-item :interval="4000000"  v-for="(item,i) in projectConfs" :key="i">
+                <el-button type="primary" @click="projectAdd()">add</el-button>
+                <el-carousel trigger="click" height="700px" :interval="4000000" arrow="always" style="margin-top: 20px" ref="carousel" >
+                    <el-carousel-item  v-for="(item,i) in projectConfs" :key="i" :name="i">
 
-                            <el-form ref="form" label-width="80px">
+                        <el-form label-width="180px">
+                            <el-input type="text" hidden v-model="projectConfs[i].uid"></el-input>
                             <el-form-item label="项目名称">
-                                    <el-input type="text" v-model="projectConfs[i].proname"></el-input>
+                                <el-input type="text" v-model="projectConfs[i].name"></el-input>
                             </el-form-item>
-                            </el-form>
-    <!--                            <el-form-item label="svn地址">-->
-    <!--                                <el-input value=''>"{{item.Svn_path}}"</el-input>-->
-    <!--                            </el-form-item>-->
-    <!--                            <el-form-item label="更新提交地址">-->
-    <!--                                <el-input value="{{ item.Name }}"></el-input>-->
-    <!--                            </el-form-item>-->
-    <!--                            <el-form-item label="更新输出地址">-->
-    <!--                                <el-input value="{{ item.Out_path }}"></el-input>-->
-    <!--                            </el-form-item>-->
-    <!--                            <el-form-item label="工程物理文件夹" >-->
-    <!--                                <el-input value="{{ item.Dir_path }}"></el-input>-->
-    <!--                            </el-form-item>-->
-    <!--                            <el-form-item >-->
-    <!--                                <el-button type="primary" @click="">保存</el-button>-->
-    <!--                            </el-form-item>-->
+                            <el-form-item label="svn地址">
+                                <el-input type="text" v-model="projectConfs[i].svnpath"></el-input>
+                            </el-form-item>
+                            <el-form-item label="更新提交地址">
+                                <el-input type="text" v-model="projectConfs[i].subpath"></el-input>
+                            </el-form-item>
+                            <el-form-item label="更新输出地址">
+                                <el-input type="text" v-model="projectConfs[i].outpath"></el-input>
+                            </el-form-item>
+                            <el-form-item label="工程物理文件夹">
+                                <el-input type="text" v-model="projectConfs[i].dirpath"></el-input>
+                            </el-form-item>
 
-                        </el-carousel-item>
-<!--                    -->
+                            <el-button type="primary" @click="projectSubmit(projectConfs[i],i)">保存</el-button>
+                            <el-button type="primary" @click="projectCopy(projectConfs[i],i)">复制</el-button>
+                            <el-button type="primary" @click="projectDel(projectConfs[i],i)">删除</el-button>
+
+                        </el-form>
+                    </el-carousel-item>
+                    <!--                    -->
                 </el-carousel>
 
             </div>
@@ -213,7 +216,7 @@
                             * 日志记录问题没有实现
                             * 整包没有实现
                             * 项目信息设置
-
+                            * 进入后默认帮助页面和单项页面切换
                         </p>
                     </el-scrollbar>
                 </div>
@@ -236,14 +239,14 @@
                 sysform: {
                     cname: '',
                     ename: '',
-                    plOuPath:'',
+                    plOuPath: '',
                     textarea: ''
                 },
-                projectForm:{},
+                projectForm: {},
                 checkboxs: [],
                 checks: [],
                 tab1: true,
-                tab2: false,
+                tab10: false,
                 tab3_1: false,
                 tab3_2: false,
                 tab4: false,
@@ -273,10 +276,10 @@
                 options: [],
                 tableData: [],
                 multipleSelection: [],
-                projectConfs:[]
+                projectConfs: []
             }
         },
-        beforeCreate(){
+        beforeCreate() {
 
         },
         created() {
@@ -307,8 +310,43 @@
             });
         },
         methods: {
+            projectCopy(project,i){
+                var item = {
+                    uid: new Date().getTime(),
+                    name: project.name,
+                    svnpath: project.svnpath,
+                    dirpath: project.dirpath,
+                    subpath: project.subpath,
+                    outpath: project.outpath
+                };
+                this.projectConfs.splice(0, 0, item)
+
+                console.log(i)
+                console.log(project.uid)
+            },
+            projectDel(project,i){
+                console.log(i)
+                console.log(project.uid)
+                this.projectConfs.splice(i, 1)
+            },
+            projectAdd(){
+                var item = {
+                    uid: new Date().getTime(),
+                    name: '',
+                    svnpath: '',
+                    dirpath: '',
+                    subpath: '',
+                    outpath: ''
+                };
+                this.projectConfs.splice(0, 0, item)
+                console.log(item.uid)
+            },
+            projectSubmit(project,i) {
+                console.log(i)
+                console.log(project.uid)
+            },
             sysOnSubmit() {
-                window.backend.ThisCopy.UpSysConfig(this.sysform.cname, this.sysform.ename,this.sysform.plOuPath,this.sysform.textarea).then(result => {
+                window.backend.ThisCopy.UpSysConfig(this.sysform.cname, this.sysform.ename, this.sysform.plOuPath, this.sysform.textarea).then(result => {
                     if (result == '操作成功') {
                         this.showMessages('操作成功！' + '请重启。', 'info')
                     } else {
@@ -325,12 +363,19 @@
                 });
 
             },
-            project(){
+            project() {
                 window.backend.ThisCopy.GetProjectConfs().then(result => {
-                    if(result){
+                    if (result) {
                         var _array = eval(result);
-                        _array.forEach((s,i) =>{
-                            var item = {proname: s.Name};
+                        _array.forEach((s, i) => {
+                            var item = {
+                                uid: s.Uid,
+                                name: s.Name,
+                                svnpath: s.Svn_path,
+                                dirpath: s.Dir_path,
+                                subpath: s.Sub_path,
+                                outpath: s.Out_path
+                            };
                             this.projectConfs.push(item);
                         })
                     }
@@ -359,9 +404,9 @@
             //jar包名称
             getJarNames() {
                 window.backend.ThisCopy.GetJarNames().then(result => {
-                    if(result && result.length >0){
-                        result.forEach(k =>{
-                            this.sysform.textarea += k+"\n"
+                    if (result && result.length > 0) {
+                        result.forEach(k => {
+                            this.sysform.textarea += k + "\n"
                         })
                     }
                 });
@@ -474,15 +519,15 @@
                 //console.log(key, keyPath);
                 if (key == "1") {
                     this.tab1 = true;
-                    this.tab2 = false;
+                    this.tab10 = false;
                     this.tab3_1 = false;
                     this.tab3_2 = false;
                     this.tab4 = false;
                     this.tab5 = false;
                 }
-                if (key == "2") {
+                if (key == "10") {
                     this.tab1 = false;
-                    this.tab2 = true;
+                    this.tab10 = true;
                     this.tab3_1 = false;
                     this.tab3_2 = false;
                     this.tab4 = false;
@@ -490,7 +535,7 @@
                 }
                 if (key == "3-1") {
                     this.tab1 = false;
-                    this.tab2 = false;
+                    this.tab10 = false;
                     this.tab3_1 = true;
                     this.tab3_2 = false;
                     this.tab4 = false;
@@ -498,7 +543,7 @@
                 }
                 if (key == "3-2") {
                     this.tab1 = false;
-                    this.tab2 = false;
+                    this.tab10 = false;
                     this.tab3_1 = false;
                     this.tab3_2 = true;
                     this.tab4 = false;
@@ -506,7 +551,7 @@
                 }
                 if (key == "4") {
                     this.tab1 = false;
-                    this.tab2 = false;
+                    this.tab10 = false;
                     this.tab3_1 = false;
                     this.tab3_2 = false;
                     this.tab4 = true;
@@ -515,7 +560,7 @@
                 if (key == "5") {
 
                     this.tab1 = false;
-                    this.tab2 = false;
+                    this.tab10 = false;
                     this.tab3_1 = false;
                     this.tab3_2 = false;
                     this.tab4 = false;

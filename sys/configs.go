@@ -39,13 +39,13 @@ func (s *ThisCopy) GetProjectName() string {
 	vreStr := "["
 	for i, conf := range myConfs {
 		if i == len(myConfs)-1 {
-			vreStr += `{value:'` + conf.Name + `',label:'` + conf.Name + `'}`
+			vreStr += `{value:'` + conf.Uid + `',label:'` + conf.Name + `'}`
 		} else {
-			vreStr += `{value:'` + conf.Name + `',label:'` + conf.Name + `'},`
+			vreStr += `{value:'` + conf.Uid + `',label:'` + conf.Name + `'},`
 		}
 	}
 	vreStr += "]"
-	fmt.Println(vreStr)
+	//fmt.Println(vreStr)
 	return vreStr
 }
 
@@ -76,18 +76,32 @@ func (s *ThisCopy) GetJarNames() []string {
 
 //获取已经提交的日志信息
 func (s *ThisCopy) GetSubmitedLogInfo(projectname string, kssj string, jssj string, czr string) string {
+	fmt.Println(projectname)
 	var selectedProject Confs
 	for _, conf := range ProjectConfs {
-		if conf.Name == projectname {
+		if conf.Uid == projectname {
 			selectedProject = conf
 			break
 		}
+	}
+	if selectedProject.Uid == "" {
+		li := []SvnInfo{}
+		svnInfoTemp := SvnInfo{}
+		svnInfoTemp.Name = ""
+		svnInfoTemp.Path = "项目信息异常。无法获取日志"
+		svnInfoTemp.Version = ""
+		svnInfoTemp.Time = ""
+		li = append(li, svnInfoTemp)
+		lang, err := json.Marshal(li)
+		if err == nil {
+		}
+		str := string(lang)
+		return str
 	}
 	var logs string
 	sysType := runtime.GOOS
 	var output []byte
 	var err error
-	var command string
 	if sysType == "windows" {
 		//fmt.Println("WIN")
 		var enc mahonia.Decoder
@@ -112,7 +126,19 @@ func (s *ThisCopy) GetSubmitedLogInfo(projectname string, kssj string, jssj stri
 		logs = string(output)
 	}
 	if err != nil {
-		fmt.Printf("Execute Shell:%s failed with error:%s", command, err.Error())
+		//fmt.Printf("Execute Shell:%s failed with error:%s", command, err.Error())
+		li := []SvnInfo{}
+		svnInfoTemp := SvnInfo{}
+		svnInfoTemp.Name = ""
+		svnInfoTemp.Path = "SVN连接超时，日志获取失败！"
+		svnInfoTemp.Version = ""
+		svnInfoTemp.Time = ""
+		li = append(li, svnInfoTemp)
+		lang, err := json.Marshal(li)
+		if err == nil {
+		}
+		str := string(lang)
+		return str
 	}
 	//找到的所有日志
 	baseLog := strings.Split(logs, "------------------------------------------------------------------------")
@@ -125,9 +151,7 @@ func (s *ThisCopy) GetSubmitedLogInfo(projectname string, kssj string, jssj stri
 	}
 	RequsNum = ""
 	SubLogs = ""
-
 	svnPaths := strings.Split(selectedProject.Svn_path, "/")
-
 	var svnInfoTemp SvnInfo
 	li := []SvnInfo{}
 	for _, s := range searchLog {
@@ -177,7 +201,6 @@ func (s *ThisCopy) GetSubmitedLogInfo(projectname string, kssj string, jssj stri
 					li = append(li, svnInfoTemp)
 				}
 			}
-
 			if i == isSvnLogLine+1 {
 				temp := strings.Split(s2, ":")
 				if len(temp) == 1 {
@@ -192,15 +215,10 @@ func (s *ThisCopy) GetSubmitedLogInfo(projectname string, kssj string, jssj stri
 			}
 		}
 	}
-	//strVre := "["
-	//for _, info := range li {
-	//
-	//}
 	lang, err := json.Marshal(li)
 	if err == nil {
 	}
 	str := string(lang)
-	//fmt.Println(str)
 	return str
 }
 

@@ -48,4 +48,5 @@ type Confs struct {
 	Svn_path string
 	Out_path string
 	Name     string
+	Uid      string
 }
