@@ -39,9 +39,9 @@ func (s *ThisCopy) GetProjectName() string {
 	vreStr := "["
 	for i, conf := range myConfs {
 		if i == len(myConfs)-1 {
-			vreStr += `{value:'` + conf.Uid + `',label:'` + conf.Name + `'}`
+			vreStr += `{value:'` + conf.Name + `',label:'` + conf.Name + `'}`
 		} else {
-			vreStr += `{value:'` + conf.Uid + `',label:'` + conf.Name + `'},`
+			vreStr += `{value:'` + conf.Name + `',label:'` + conf.Name + `'},`
 		}
 	}
 	vreStr += "]"
@@ -79,12 +79,12 @@ func (s *ThisCopy) GetSubmitedLogInfo(projectname string, kssj string, jssj stri
 	fmt.Println(projectname)
 	var selectedProject Confs
 	for _, conf := range ProjectConfs {
-		if conf.Uid == projectname {
+		if conf.Name == projectname {
 			selectedProject = conf
 			break
 		}
 	}
-	if selectedProject.Uid == "" {
+	if selectedProject.Name == "" {
 		li := []SvnInfo{}
 		svnInfoTemp := SvnInfo{}
 		svnInfoTemp.Name = ""
@@ -399,7 +399,62 @@ func (s *ThisCopy) UpSysConfig(cname string, ename string, plOuPath string, text
 
 }
 
-func (s *ThisCopy) UpProjectConfig() string {
-
-	return ""
+//更新项目配置
+func (s *ThisCopy) SaveOrUpdatePorjectConfig(project string) string {
+	str := []byte(project)
+	conf := Confs{}
+	json.Unmarshal(str, &conf)
+	existConfs := MyConfig.Conf
+	//是否重名
+	var doubleName = 0
+	//是否更新
+	var isModify = 0
+	for _, existConf := range existConfs {
+		if existConf.Name == conf.Name && existConf.Uid != conf.Uid {
+			doubleName += 1
+		}
+		if existConf.Uid == conf.Uid {
+			isModify += 1
+		}
+	}
+	if doubleName > 0 {
+		return "项目名称重复，请修改项目名称。"
+	}
+	if isModify >= 1 {
+		for i, existConf := range existConfs {
+			if existConf.Name == conf.Name {
+				existConfs[i] = conf
+			}
+		}
+	} else {
+		existConfs = append(existConfs, conf)
+	}
+	viper.Set("conf", existConfs)
+	err := viper.WriteConfig()
+	if err != nil {
+		fmt.Println(err)
+		return "操作失败"
+	} else {
+		return "操作成功"
+	}
+}
+func (s *ThisCopy) DelProjectConfig(project string) string {
+	str := []byte(project)
+	conf := Confs{}
+	json.Unmarshal(str, &conf)
+	existConfs := MyConfig.Conf
+	for i, j := 0, len(existConfs); i < j; i = i + 1 {
+		if existConfs[i].Uid == conf.Uid {
+			existConfs = append(existConfs[:i], existConfs[i+1:]...)
+			viper.Set("conf", existConfs)
+			err := viper.WriteConfig()
+			if err != nil {
+				fmt.Println(err)
+				return "操作失败"
+			} else {
+				return "操作成功"
+			}
+		}
+	}
+	return "操作成功"
 }

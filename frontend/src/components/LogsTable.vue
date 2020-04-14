@@ -120,8 +120,7 @@
                     </el-form-item>
                     <el-form-item label="项目选择">
                         <el-checkbox-group v-model="checks" class="checkGroup" size="900">
-                            <el-checkbox v-for="(item) in checkboxs" :label="item.value" :key="item.value"
-                                         @change="handleCheckedChange" border>{{item.value}}
+                            <el-checkbox v-for="(item) in checkboxs" :label="item.label" :key="item.value" border>{{item.value}}
                             </el-checkbox>
                         </el-checkbox-group>
                     </el-form-item>
@@ -144,12 +143,12 @@
             </div>
             <div v-if="tab3_1" style="margin-top: 2px">
                 <p style="white-space: pre-line;color: #303133;text-align: left;">项目信息</p>
-                <el-button type="primary" @click="projectAdd()">add</el-button>
-                <el-carousel trigger="click" height="700px" :interval="4000000" arrow="always" style="margin-top: 20px" ref="carousel" >
+                <el-button type="primary" @click="projectAdd()">新增空配置</el-button>
+                <el-carousel trigger="click" height="500px" :interval="4000000" arrow="always" style="margin-top: 20px" ref="carousel" >
                     <el-carousel-item  v-for="(item,i) in projectConfs" :key="i" :name="i">
 
                         <el-form label-width="180px">
-                            <el-input type="text" hidden v-model="projectConfs[i].uid"></el-input>
+                            <el-input type="text" v-model="projectConfs[i].uid" hidden></el-input>
                             <el-form-item label="项目名称">
                                 <el-input type="text" v-model="projectConfs[i].name"></el-input>
                             </el-form-item>
@@ -172,7 +171,6 @@
 
                         </el-form>
                     </el-carousel-item>
-                    <!--                    -->
                 </el-carousel>
 
             </div>
@@ -207,7 +205,6 @@
                         <p style="white-space: pre-line;color: #303133;text-align: left;">帮助中心</p>
                         <p style="white-space: pre-line;color: #303133;text-align: left;">
                             1.批量输出地址没有配置，则使用找到的第一个项目输出地址
-                            2.
 
 
                         </p>
@@ -215,7 +212,7 @@
                         <p style="white-space: pre-line;color: #303133;text-align: left;">
                             * 日志记录问题没有实现
                             * 整包没有实现
-                            * 项目信息设置
+                            * 配置信息修改后没有进行参数刷新，需要重启
                             * 进入后默认帮助页面和单项页面切换
                         </p>
                     </el-scrollbar>
@@ -276,7 +273,9 @@
                 options: [],
                 tableData: [],
                 multipleSelection: [],
-                projectConfs: []
+                projectConfs: [],
+                //新增配置或复制配置时的提示信息
+                tips:''
             }
         },
         beforeCreate() {
@@ -312,38 +311,64 @@
         methods: {
             projectCopy(project,i){
                 var item = {
-                    uid: new Date().getTime(),
-                    name: project.name,
+                    uid: 'project-'+new Date().getTime(),
+                    name: project.name+new Date().getTime(),
                     svnpath: project.svnpath,
                     dirpath: project.dirpath,
                     subpath: project.subpath,
                     outpath: project.outpath
                 };
                 this.projectConfs.splice(0, 0, item)
-
-                console.log(i)
-                console.log(project.uid)
+                window.backend.ThisCopy.SaveOrUpdatePorjectConfig(JSON.stringify(item)).then(result => {
+                    if (result == '操作成功') {
+                        this.showMessages('操作成功！' + '请重启。', 'info')
+                    } else {
+                        this.showMessages(result, 'warning')
+                    }
+                });
             },
             projectDel(project,i){
-                console.log(i)
-                console.log(project.uid)
+                if(this.projectConfs.length <= 1){
+                    this.showMessages("最后一个配置了，别删了。", 'warning')
+                    return
+                }
                 this.projectConfs.splice(i, 1)
+                window.backend.ThisCopy.DelProjectConfig(JSON.stringify(project)).then(result => {
+                    if (result == '操作成功') {
+                        this.showMessages('操作成功！' + '请重启。', 'info')
+                    } else {
+                        this.showMessages(result, 'warning')
+                    }
+                });
+
             },
+            //新增一个新项目的配置
             projectAdd(){
                 var item = {
-                    uid: new Date().getTime(),
-                    name: '',
+                    uid: 'project-'+new Date().getTime(),
+                    name: 'project-'+new Date().getTime(),
                     svnpath: '',
                     dirpath: '',
                     subpath: '',
                     outpath: ''
                 };
                 this.projectConfs.splice(0, 0, item)
-                console.log(item.uid)
+                window.backend.ThisCopy.SaveOrUpdatePorjectConfig(JSON.stringify(item)).then(result => {
+                    if (result == '操作成功') {
+                        this.showMessages('操作成功！' + '请重启。', 'info')
+                    } else {
+                        this.showMessages(result, 'warning')
+                    }
+                });
             },
             projectSubmit(project,i) {
-                console.log(i)
-                console.log(project.uid)
+                window.backend.ThisCopy.SaveOrUpdatePorjectConfig(JSON.stringify(project)).then(result => {
+                    if (result == '操作成功') {
+                        this.showMessages('操作成功！' + '请重启。', 'info')
+                    } else {
+                        this.showMessages(result, 'warning')
+                    }
+                });
             },
             sysOnSubmit() {
                 window.backend.ThisCopy.UpSysConfig(this.sysform.cname, this.sysform.ename, this.sysform.plOuPath, this.sysform.textarea).then(result => {
@@ -363,20 +388,13 @@
                 });
 
             },
+            //获取所有已经配置的项目
             project() {
                 window.backend.ThisCopy.GetProjectConfs().then(result => {
                     if (result) {
                         var _array = eval(result);
                         _array.forEach((s, i) => {
-                            var item = {
-                                uid: s.Uid,
-                                name: s.Name,
-                                svnpath: s.Svn_path,
-                                dirpath: s.Dir_path,
-                                subpath: s.Sub_path,
-                                outpath: s.Out_path
-                            };
-                            this.projectConfs.push(item);
+                            this.projectConfs.push(s);
                         })
                     }
                 });

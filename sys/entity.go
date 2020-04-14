@@ -43,10 +43,10 @@ type Config struct {
 
 //项目配置
 type Confs struct {
-	Sub_path string
-	Dir_path string
-	Svn_path string
-	Out_path string
-	Name     string
-	Uid      string
+	Sub_path string `json:"subpath"`
+	Dir_path string `json:"dirpath"`
+	Svn_path string `json:"svnpath"`
+	Out_path string `json:"outpath"`
+	Name     string `json:"name"`
+	Uid      string `json:"uid"`
 }
