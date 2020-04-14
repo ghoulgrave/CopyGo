@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -249,11 +250,19 @@ func (s *ThisCopy) copyfiles(projectConf Confs, checkedInfos []SvnInfo, dateNow 
 //编译并将信息输出到runtime参数中
 func (s *ThisCopy) CmdAndChangeDirToShow(dir string, ispl bool) error {
 	//cmd := exec.Command("cmd.exe", "/c", "cd D:\\1-WorkSpace\\0_SvnProject\\bdcdj && d: && dir")
-	ePath, _ := os.Executable()
-	fmt.Println(ePath)
-	runningPath := path.Dir(ePath)
-	command := ` ` + runningPath + `/resource/install.sh ` + dir + ` .`
-	cmd := exec.Command("/bin/bash", "-c", command)
+	var cmd *exec.Cmd
+	sysType := runtime.GOOS
+
+	var err error
+	if sysType == "windows" {
+		cmd =  exec.Command("cmd.exe", "/c", "cd "+dir+" && "+dir[0:2]+" && mvn clean && mvn install")
+	}else{
+		ePath, _ := os.Executable()
+		fmt.Println(ePath)
+		runningPath := path.Dir(ePath)
+		command := ` ` + runningPath + `/resource/install.sh ` + dir + ` .`
+		cmd = exec.Command("/bin/bash", "-c", command)
+	}
 
 	//cmd := exec.Command("/bin/bash", "-c", "ls")
 	fmt.Println("CmdAndChangeDirToFile", dir, cmd.Args)
