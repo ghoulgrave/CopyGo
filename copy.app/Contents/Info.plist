@@ -1,0 +1,11 @@
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+	<key>CFBundleName</key><string>copy</string>
+	<key>CFBundleExecutable</key><string>copy</string>
+	<key>CFBundleIdentifier</key><string>wails.copy.0.1.0</string>
+	<key>CFBundleVersion</key><string>0.1.0</string>
+	<key>CFBundleGetInfoString</key><string>Built by wails build at 24 Apr 20 18:36 CST using Wails (https://wails.app)</string>
+	<key>CFBundleShortVersionString</key><string>0.1.0</string>
+	<key>CFBundleIconFile</key><string>iconfile</string>
+	<key>NSHighResolutionCapable</key><string>true</string>
+</dict></plist>
